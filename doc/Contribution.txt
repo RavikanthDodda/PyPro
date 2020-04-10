@@ -1,0 +1,22 @@
+Team 15 - contribution:
+
+
+Milestone 1 :
+
+Once all of our GitHub Pro accounts got activated to create private repositories, Ravikanth created a GitHub private repository and added us all as contributors.
+
+At the beginning of developing grammar rules, we all came up with our own rules to meet the minimum requirement of the project. Then we came up with a refined grammar by modifying rules to better satisfy our needs. Then, Somesh additionally added function and comment rules to the grammar. We all met every day through Zoom which allowed us to think through the written rules and consistently kept on improving grammar considering suggestions from every team member.
+
+All of us did some search on Google to wrap up our mind to Lexer and Parser tools like BISON, ANTLR. To our surprise, nothing seemed easier than Prolog. Because of ANTLR’s capability to generate tokens and parse trees it made us think if we should use ANTLR for get things done easier and efficiently. But considering our team knowledge and understanding of Prolog, later we finalized to go with DCG and Prolog for parsing and providing semantics.
+
+Ravikanth tried a Python library named “sly” to generate tokens and also identified a way to connect Python to Prolog. So, we now use “sly” to generate tokens.
+
+Suyog took the responsibility of writing the PDF document necessary to be submitted in Milestone 1.
+
+Finally, I am Narmada Ravali writing this document by recollecting all the phases that my team went through to successfully meet milestone 1 requirements. 
+
+Milestone 2:
+
+Instead of dividing whole modules like Lexer, Parser and Semantics among team members, we thought of splitting up the grammar rules among us to write Lexer, Parser and Semantics. That way every member will get a chance to work on every other aspect of the project and further help us resolve any programming issues that might occur collectively.
+
+
