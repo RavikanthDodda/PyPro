@@ -25,7 +25,7 @@ declaration(t_decl(I,;)) -->  name(I), [;].
 % Commnads part
 commands(t_commands(C1,C2)) -->   command(C1), commands(C2).
 commands(t_commands(C)) -->   command(C).
-command(t_command(I,=,Bl,?,E1:E2)) -->   name(I), [=], boolean(Bl), [?], expr(E1), :, expr(E2), [;].
+command(t_command(I,=,Bl,?,E1:E2,;)) -->   name(I), [=], boolean(Bl), [?], expr(E1), :, expr(E2), [;].
 % while part
 command(t_command(while,Bl,'{',B,'}')) --> [while],boolean(Bl),['{'],block(B),['}'].
 % if elif else part

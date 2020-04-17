@@ -1,0 +1,30 @@
+x = 5;
+# this is a comment
+y = 3;
+z = 1;
+if x==y {
+   y = 4;
+   if not x == y{
+       z = 2;
+   }
+   elif x == z {
+       y += 2;
+   }
+   else {
+       z *= 3;
+   }
+}
+
+s = "string"
+
+for i in range(2, 10){
+    print(i);
+}
+for(i = 0; i< 4; i++){
+    print(i);
+}
+
+while x == 3 {
+    z = 5;
+    x--;
+}
