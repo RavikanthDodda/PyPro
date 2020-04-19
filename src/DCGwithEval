@@ -188,6 +188,8 @@ paren(X) --> number(X) | word(X).
 % evaluate assignment statement
 eval_expr(t_aAssign(t_word(I),Y), Env, Scope, Val, NewEnv) :-
     eval_expr(Y, Env, Scope,Val, Env1), update(I,Val,Scope,Env1,NewEnv).
+    
+eval_expr(t_paren(X), Env, Scope, Val, NewEnv) :- eval_expr(X,Env,Scope, Val,NewEnv).
 
 eval_expr(t_aInc(t_word(I)), Env, Scope, Val, NewEnv) :-
     eval_expr(t_add(t_word(I),t_num(1)), Env, Scope, Val, Env1), 
