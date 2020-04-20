@@ -1,100 +1,101 @@
-block(t_block(B)) --> commands(B).
+program(P) --> commands(P).
 
-eval_block(t_block(B), Env, Scope, NewEnv) :- Scope1 is Scope + 1, eval_command(B, Env, Scope1, Env1),
-    			remove_var(Scope1, Env1, NewEnv).
+eval_program(P) :- eval_command(P,[],_).
 
-remove_var(_Scope, [], []).
-remove_var(Scope, [(_,_,Scope)|T], T).
-remove_var(Scope, [H|T], [H|R]) :-
-       H \= (_,_,Scope), remove_var(Scope,T,R).
-    
 %--------------------------------------------------------------------------------
 commands(t_command(X,Y)) --> command(X), commands(Y).
-commands(X) --> command(X).
+commands(t_command(X)) --> command(X).
 
+%command(X) --> block(X).
 command(t_command_assign(Y)) --> assign(Y), [;].
 command(t_command_while(X,Y)) --> 
-    [while], boolean(X), ['{'], block(Y), ['}'].
+    [while], boolean(X), ['{'], commands(Y), ['}'].
 
 command(t_command_if(X,Y)) --> 
-    [if], boolean(X), ['{'], block(Y), ['}'].
+    [if], boolean(X), ['{'], commands(Y), ['}'].
 command(t_command_ifel(X,Y,Z)) --> 
-    [if], boolean(X), ['{'], block(Y), ['}'], command_el(Z).
+    [if], boolean(X), ['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
-    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],['{'],block(T),['}'].
+    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],['{'],commands(T),['}'].
 command(t_command_for(X,Y,Z,T)) --> 
-    [for], ['('],block(X),[;],boolean(Y),[;],expr(Z),[')'],['{'],block(T),['}'].
+    [for], ['('],commands(X),[;],boolean(Y),[;],expr(Z),[')'],['{'],commands(T),['}'].
+
+command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
 command_el(t_command_el(X,Y)) --> 
-    [elif], boolean(X), ['{'], block(Y), ['}'].
+    [elif], boolean(X), ['{'], commands(Y), ['}'].
 command_el(t_command_el(X,Y,Z)) --> 
-    [elif], boolean(X), ['{'], block(Y), ['}'], command_el(Z). 
+    [elif], boolean(X), ['{'], commands(Y), ['}'], command_el(Z). 
 command_el(t_command_else(Y)) --> 
-    [else], ['{'], block(Y), ['}'].
+    [else], ['{'], commands(Y), ['}'].
 
 
 % change declaration for,eval_command(P,[],0,S)).
 
-eval_command(t_command_assign(X),Env,Scope,NewEnv) :- 
-    eval_expr(X,Env,Scope,_Val,NewEnv).
+eval_command(t_command_assign(X),Env,NewEnv) :- 
+    eval_expr(X,Env,_Val,NewEnv).
 
-eval_command(t_command(X,Y),Env,Scope,NewEnv) :- 
-    eval_command(X,Env,Scope,NewEnv1), eval_command(Y,NewEnv1,Scope,NewEnv).
+eval_command(t_command(X,Y),Env,NewEnv) :- 
+    eval_command(X,Env,NewEnv1), eval_command(Y,NewEnv1,NewEnv).
 
-eval_command(t_command_if(X,Y),Env,Scope,NewEnv) :- 
-    eval_boolean(X,Env,Scope,NewEnv1,true), eval_block(Y,NewEnv1,Scope,NewEnv). 
+eval_command(t_command(X),Env,NewEnv) :- 
+    eval_command(X,Env,NewEnv).
 
-eval_command(t_command_ifel(X,Y,_Z),Env,Scope,NewEnv) :- 
-    eval_boolean(X,Env,Scope,NewEnv1,true), eval_block(Y,NewEnv1,Scope,NewEnv). 
-eval_command(t_command_ifel(X,_Y,Z),Env,Scope,NewEnv) :- 
-    eval_boolean(X,Env,Scope,NewEnv1,false),eval_block(Z,NewEnv1,Scope,NewEnv).
+eval_command(t_command_if(X,Y),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 
-eval_command(t_command_el(X,Y,_Z),Env,Scope,NewEnv) :- 
-    eval_boolean(X,Env,Scope,NewEnv1,true), eval_block(Y,NewEnv1,Scope,NewEnv). 
-eval_command(t_command_el(X,_Y,Z),Env,Scope,NewEnv) :- 
-    eval_boolean(X,Env,Scope,NewEnv1,false),eval_block(Z,NewEnv1,Scope,NewEnv).
+eval_command(t_command_ifel(X,Y,_Z),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
+eval_command(t_command_ifel(X,_Y,Z),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,false),eval_command(Z,NewEnv1,NewEnv).
 
-eval_command(t_command_else(X),Env,Scope,NewEnv) :- 
-   	eval_block(X,Env,Scope,NewEnv).
+eval_command(t_command_el(X,Y,_Z),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
+eval_command(t_command_el(X,_Y,Z),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,false),eval_command(Z,NewEnv1,NewEnv).
 
-eval_command(t_command_while(X,Y),Env,Scope,NewEnv) :-  
-    eval_boolean(X,Env,Scope,NewEnv1,true),eval_block(Y,NewEnv1,Scope,NewEnv2),
-    eval_command(t_command_while(X,Y),NewEnv2,Scope,NewEnv).
-eval_command(t_command_while(X,_Y),Env,Scope,NewEnv) :-  
-    eval_boolean(X,Env,Scope,NewEnv,false).
+eval_command(t_command_else(X),Env,NewEnv) :- 
+   	eval_command(X,Env,NewEnv).
 
-eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,Scope,NewEnv) :- 
-    lookup(X,Env,Val1),eval_expr(Y,Env,Scope,Val2,Env1), eval_expr(Z,Env1,Scope,Val3,Env2), 
-    (between(Val2, Val3, Val1)-> eval_block(T,Env2,Scope,Env3), 
-    lookup(X,Env3,Val4),Val5 is Val4 + 1, update(X,Val5,Scope,Env3,Env4),
-    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,Scope,NewEnv);
+eval_command(t_command_while(X,Y),Env,NewEnv) :-  
+    eval_boolean(X,Env,NewEnv1,true),eval_command(Y,NewEnv1,NewEnv2),
+    eval_command(t_command_while(X,Y),NewEnv2,NewEnv).
+eval_command(t_command_while(X,_Y),Env,NewEnv) :-  
+    eval_boolean(X,Env,NewEnv,false).
+
+eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,NewEnv) :- 
+    lookup(X,Env,Val1),eval_expr(Y,Env,Val2,Env1), eval_expr(Z,Env1,Val3,Env2), 
+    (between(Val2, Val3, Val1)-> eval_command(T,Env2,Env3), 
+    lookup(X,Env3,Val4),Val5 is Val4 + 1, update(X,Val5,Env3,Env4),
+    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,NewEnv);
     writeln(2),NewEnv = Env).
 
-eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,Scope,NewEnv) :-
-    \+lookup(X,Env,_Val1),eval_expr(Y,Env,Scope,Val2,Env1),update(X,Val2,Scope,Env1,Env2), 
-    eval_expr(Z,Env2,Scope,_Val3,Env3), 
-    eval_block(T,Env3,Scope,Env4), 
-    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,Scope,NewEnv),writeln(1).
+eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,NewEnv) :-
+    \+lookup(X,Env,_Val1),eval_expr(Y,Env,Val2,Env1),update(X,Val2,Env1,Env2), 
+    eval_expr(Z,Env2,_Val3,Env3), 
+    eval_command(T,Env3,Env4), 
+    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,NewEnv),writeln(1).
 
-eval_command(t_command_for(X,Y,Z,T), Env,Scope, NewEnv) :- 
-    eval_command(X,Env,Scope,NewEnv1),
-    eval_boolean(Y,NewEnv1,Scope,NewEnv2,true),
-    eval_block(T,NewEnv2,Scope,NewEnv3),
-    eval_expr(Z,NewEnv3,Scope,_Val,NewEnv4),
-    eval_command(t_command_for(Y,Z,T),NewEnv4,Scope,NewEnv).
+eval_command(t_command_for(X,Y,Z,T), Env, NewEnv) :- 
+    eval_command(X,Env,NewEnv1),
+    eval_boolean(Y,NewEnv1,NewEnv2,true),
+    eval_command(T,NewEnv2,NewEnv3),
+    eval_expr(Z,NewEnv3,_Val,NewEnv4),
+    eval_command(t_command_for(Y,Z,T),NewEnv4,NewEnv).
 
-eval_command(t_command_for(Y,Z,T), Env,Scope, NewEnv) :- 
-    eval_boolean(Y,Env,Scope,NewEnv2,true),
-    eval_command(T,NewEnv2,Scope,NewEnv3),eval_expr(Z,NewEnv3,Scope,NewEnv4,_Val),
-    eval_command(t_command_for(Y,Z,T),NewEnv4,Scope,NewEnv).
+eval_command(t_command_for(Y,Z,T), Env, NewEnv) :- 
+    eval_boolean(Y,Env,NewEnv2,true),
+    eval_command(T,NewEnv2,NewEnv3),eval_expr(Z,NewEnv3,NewEnv4,_Val),
+    eval_command(t_command_for(Y,Z,T),NewEnv4,NewEnv).
 
-eval_command(t_command_for(X,Y,_Z,_T), Env,Scope, NewEnv) :- 
-    eval_command(X,Env,Scope,NewEnv1), eval_boolean(Y,NewEnv1,Scope,NewEnv,false).  
-eval_command(t_command_for(Y,_Z,_T), Env,Scope, NewEnv) :- 
-    eval_boolean(Y,Env,Scope,NewEnv,false).
+eval_command(t_command_for(X,Y,_Z,_T), Env, NewEnv) :- 
+    eval_command(X,Env,NewEnv1), eval_boolean(Y,NewEnv1,NewEnv,false).  
+eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :- 
+    eval_boolean(Y,Env,NewEnv,false).
 
-eval_command(t_block(X),Env,Scope,NewEnv):- eval_block(t_block(X),Env,Scope,NewEnv).
+eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),write(Val).
+%eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
 %--------------------------------------------------------------------------------
 :- table boolean/3.
 
@@ -110,39 +111,39 @@ boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<], [=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>], [=], expr(Y).
 
-eval_boolean(t_b_true,Env,_Scope,Env,true).
-eval_boolean(t_b_false,Env,_Scope,Env,false).
-eval_boolean(t_b_not(X),Env,Scope,NewEnv,Condition) :- 
-    eval_boolean(X,Env,Scope,NewEnv,Val1),not(Val1, Condition).
+eval_boolean(t_b_true,Env,Env,true).
+eval_boolean(t_b_false,Env,Env,false).
+eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
-eval_boolean(t_b_equals(X,Y),Env,Scope,NewEnv,Condition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv), 
+eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
 
-eval_boolean(t_b_not_equals(X,Y),Env,Scope,NewEnv,Condition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv), 
+eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,C1), not(C1,Condition).
 
-eval_boolean(t_b_and(X,Y),Env,Scope,NewEnv,Condition) :- 
-    eval_boolean(X,Env,Scope,Env1,Val1), eval_boolean(Y,Env1,Scope,NewEnv,Val2), 
+eval_boolean(t_b_and(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
     andCond(Val1,Val2,Condition).
 
 
-eval_boolean(t_b_or(X,Y),Env,Scope,NewEnv,Condition) :- 
-    eval_boolean(X,Env,Scope,Env1,Val1), eval_boolean(Y,Env1,Scope,NewEnv,Val2), 
+eval_boolean(t_b_or(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
     orCond(Val1, Val2, Condition).
 
-eval_boolean(t_b_l(X,Y),Env,Scope,NewEnv,Condition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv), 
+eval_boolean(t_b_l(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     lesser(Val1,Val2,Condition).
-eval_boolean(t_b_g(X,Y),Env,Scope,NewEnv,Condtition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv), 
+eval_boolean(t_b_g(X,Y),Env,NewEnv,Condtition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     greater(Val1,Val2,Condtition).
-eval_boolean(t_b_lte(X,Y),Env,Scope,NewEnv,Condtition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv), 
+eval_boolean(t_b_lte(X,Y),Env,NewEnv,Condtition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     lesserEqual(Val1,Val2,Condtition).
-eval_boolean(t_b_gte(X,Y),Env,Scope,NewEnv,Condtition) :- 
-    eval_expr(X,Env,Scope,Val1,Env1), eval_expr(Y,Env1,Scope,Val2,NewEnv),
+eval_boolean(t_b_gte(X,Y),Env,NewEnv,Condtition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv),
     greaterEqual(Val1,Val2,Condtition).
 
 
@@ -193,80 +194,3 @@ term(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
-
-% evaluate assignment statement
-eval_expr(t_aAssign(t_word(I),Y), Env, Scope, Val, NewEnv) :-
-    eval_expr(Y, Env, Scope,Val, Env1), update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_paren(X), Env, Scope, Val, NewEnv) :- eval_expr(X,Env,Scope, Val,NewEnv).
-
-eval_expr(t_aInc(t_word(I)), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_add(t_word(I),t_num(1)), Env, Scope, Val, Env1), 
-    update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_aDec(t_word(I)), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_sub(t_word(I),t_num(1)), Env, Scope, Val, Env1), 
-    update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_aAdd(t_word(I),Y), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_add(t_word(I),Y), Env, Scope, Val, Env1),
-    update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_aSub(t_word(I),Y), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_sub(t_word(I),Y), Env, Scope, Val, Env1), 
-    update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_aMult(t_word(I),Y), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_mult(t_word(I),Y), Env, Scope, Val, Env1),
-    update(I,Val,Scope,Env1,NewEnv).
-
-eval_expr(t_aDiv(t_word(I),Y), Env, Scope, Val, NewEnv) :-
-    eval_expr(t_div(t_word(I),Y), Env, Scope, Val, Env1),
-    update(I,Val,Scope,Env1,NewEnv).
-
-% evaluate addition, subtraction, division, multiplication
-eval_expr(t_add(X,Y), Env, Scope, Val, NewEnv):-
-	eval_expr(X, Env, Scope, Val1, Env1), 
-    eval_expr(Y, Env1, Scope, Val2, NewEnv), 
-    Val is Val1 + Val2.
-eval_expr(t_sub(X,Y), Env, Scope, Val, NewEnv):-
-	eval_expr(X, Env, Scope, Val1, Env1),
-    eval_expr(Y, Env1, Scope, Val2, NewEnv),
-    Val is Val1 - Val2.
-eval_expr(t_mult(X,Y), Env, Scope, Val, NewEnv):-
-	eval_expr(X, Env, Scope, Val1, Env1),  
-    eval_expr(Y, Env1, Scope, Val2, NewEnv), 
-    Val is Val1 * Val2.
-eval_expr(t_div(X,Y), Env, Scope, Val, NewEnv):-
-	eval_expr(X, Env, Scope, Val1, Env1), 
-    eval_expr(Y, Env1, Scope, Val2, NewEnv), 
-    Val is Val1 / Val2.
-eval_expr(t_mod(X,Y), Env, Scope, Val, NewEnv):-
-	eval_expr(X, Env, Scope, Val1, Env1), 
-    eval_expr(Y, Env1, Scope, Val2, NewEnv), 
-    Val is Val1 mod Val2.
-
-eval_expr(t_word(I), Env, _Scope, Val, Env):- lookup(I, Env, Val).
-eval_expr(t_num(X), Env, _Scope, X, Env).
-eval_expr(t_string(X), Env, _Scope, X, Env).
-
-% look for the variable value in the environment
-lookup(I, [(I,Val,_)|_], Val).
-lookup(I, [_|T], Val) :- lookup(I, T, Val).
-
-% update value of variable in the current environment
-update(Id, Val, Scope, [], [(Id, Val, Scope)]).
-update(Id, Val, Scope, [(Id,_,_)|T], [(Id,Val,Scope)|T]).
-update(Id, Val, Scope, [H|T], [H|R]) :-
-       H \= (Id,_,Scope), update(Id, Val, Scope,T,R).
-update(Id, Val, Scope, [H|T], [(Id,Val)|R]) :-
-       H == (Id,_,_), update(Id, Val, Scope,T,R).
-
-%-------------------------------------------------------------------------
-
-%--------------------------------------------------------------------------
-string_q(t_string(X)) --> [X],{ string(X)}.
-
-keywords([+,-,>,<,=,while,for,if,elif,else]).
-number(t_num(X)) --> [X],{number(X)}.
-word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
