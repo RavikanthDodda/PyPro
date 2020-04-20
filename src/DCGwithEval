@@ -194,3 +194,189 @@ term(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
+
+% evaluate assignment statement
+eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
+    
+eval_expr(t_paren(X), Env, Val, NewEnv) :- eval_expr(X,Env, Val,NewEnv).
+
+eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-
+    eval_expr(t_add(t_word(I),t_num(1)), Env, Val, Env1), 
+    update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aDec(t_word(I)), Env, Val, NewEnv) :-
+    eval_expr(t_sub(t_word(I),t_num(1)), Env, Val, Env1), 
+    update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aAdd(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_add(t_word(I),Y), Env, Val, Env1),
+    update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aSub(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_sub(t_word(I),Y), Env, Val, Env1), 
+    update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aMult(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_mult(t_word(I),Y), Env, Val, Env1),
+    update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aDiv(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_div(t_word(I),Y), Env, Val, Env1),
+    update(I,Val,Env1,NewEnv).
+
+% evaluate addition, subtraction, division, multiplication
+eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    number(Val1), string(Val2),
+    writeln("int and string can not be concatenated"), fail.
+
+eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    string(Val1), number(Val2),
+    writeln("string and int can not be concatenated"), fail.
+
+
+eval_expr(t_add(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    \+string(Val1), \+string(Val2),
+    Val is Val1 + Val2.
+
+eval_expr(t_add(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    \+ number(Val1), \+ number(Val2), 
+    atomic_concat(Val1, Val2, Val).
+
+eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), string(Val2),
+    writeln("string and string can not be subtrated"), fail.
+
+eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), number(Val2),
+    writeln("string and int can not be subtrated"), fail.
+
+eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    number(Val1), string(Val2),
+    writeln("int and string can not be subtrated"), fail.
+
+eval_expr(t_sub(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    number(Val1), number(Val2),
+    Val is Val1 - Val2.
+
+eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), string(Val2),
+    writeln("string and string can not be multiplied"), fail.
+
+eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), number(Val2),
+    writeln("string and int can not be multiplied"), fail.
+
+eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    number(Val1), string(Val2),
+    writeln("int and string can not be multiplied"), fail.
+
+eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),  
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    \+ number(Val1), \+ number(Val2),
+    Val is Val1 * Val2.
+
+eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), string(Val2),
+    writeln("string and string can not be divided"), fail.
+
+eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), number(Val2),
+    writeln("string and int can not be divided"), fail.
+
+eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    number(Val1), string(Val2),
+    writeln("int and string can not be divided"), fail.
+
+eval_expr(t_div(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv),
+    \+ number(Val1), \+ number(Val2),
+    Val is Val1 / Val2.
+
+eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), string(Val2),
+    writeln("modulus of string and int can not be evaluated"), fail.
+
+eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    string(Val1), number(Val2),
+    writeln("modulus of string and int can not be evaluated"), fail.
+
+eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1),
+    eval_expr(Y, Env1, Val2, NewEnv),
+    number(Val1), string(Val2),
+    writeln("modulus of string and int can not be evaluated"), fail.
+
+eval_expr(t_mod(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    \+ number(Val1), \+ number(Val2),
+    Val is Val1 mod Val2.
+
+eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).
+eval_expr(t_num(X), Env, X, Env).
+eval_expr(t_string(X), Env, X, Env).
+
+% look for the variable value in the environment
+lookup(I, [(I,Val)|_], Val).
+lookup(I, [_|T], Val) :- lookup(I, T, Val).
+
+% update value of variable in the current environment
+update(Id, Val, [], [(Id, Val)]).
+update(Id, Val, [(Id,_)|T], [(Id,Val)|T]).
+update(Id, Val, [H|T], [H|R]) :-
+       H \= (Id,_), update(Id, Val,T,R).
+
+
+printseq(t_expr_printseq_print(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
+
+
+printseq(t_expr_print(E)) --> \+printseq(t_expr_printseq_print(_X,_Y)) ,expr(E).
+
+eval_printseq(t_expr_printseq_print(E,Ps),Env,NewEnv,Val) :-
+    eval_expr(E,Env,Val1,Env1), eval_printseq(Ps,Env1,NewEnv,Val2),
+    atomic_concat(Val1, Val2, Val).
+
+eval_printseq(t_expr_print(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
+%-------------------------------------------------------------------------
+
+%--------------------------------------------------------------------------
+string_q(t_string(X)) --> [X],{ string(X)}.
+
+keywords([+,-,>,<,=,while,for,if,elif,else,print]).
+number(t_num(X)) --> [X],{number(X)}.
+word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
