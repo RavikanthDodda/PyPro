@@ -192,9 +192,9 @@ expr(t_add(X,Y)) --> expr(X),[+],term(Y).
 expr(t_sub(X,Y)) --> expr(X),[-],term(Y).
 expr(X) --> term(X).
 
-term(t_mult(X,Y)) --> term(X),[*],number(Y).
-term(t_div(X,Y)) --> term(X),[/],number(Y).
-term(t_mod(X,Y)) --> term(X),['%'],number(Y).
+term(t_mult(X,Y)) --> term(X),[*],paren(Y).
+term(t_div(X,Y)) --> term(X),[/],paren(Y).
+term(t_mod(X,Y)) --> term(X),['%'],paren(Y).
 term(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
@@ -232,71 +232,71 @@ eval_expr(t_aDiv(t_word(I),Y), Env, Val, NewEnv) :-
 
 % evaluate addition, subtraction, division, multiplication
 eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv), 
     number(Val1), string(Val2),
     writeln("int and string can not be concatenated"), fail.
 
 eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv), 
     string(Val1), number(Val2),
     writeln("string and int can not be concatenated"), fail.
 
 
 eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv), 
     \+string(Val1), \+string(Val2),
     Val is Val1 + Val2.
 
 eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv), 
     \+ number(Val1), \+ number(Val2), 
     atomic_concat(Val1, Val2, Val).
 
 eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), string(Val2),
     writeln("string and string can not be subtrated"), fail.
 
 eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), number(Val2),
     writeln("string and int can not be subtrated"), fail.
 
 eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     number(Val1), string(Val2),
     writeln("int and string can not be subtrated"), fail.
 
 eval_expr(t_sub(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     number(Val1), number(Val2),
     Val is Val1 - Val2.
 
-eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+eval_expr(t_mult(X,Y), Env, _Val, NewEnv):-
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), string(Val2),
     writeln("string and string can not be multiplied"), fail.
 
-eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), number(Val2),
-    writeln("string and int can not be multiplied"), fail.
+    multiply_string(Val1, Val2, Val).
 
-eval_expr(t_mul(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     number(Val1), string(Val2),
-    writeln("int and string can not be multiplied"), fail.
+    multiply_string(Val2, Val1, Val).
 
 eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
 eval_expr(X, Env, Val1, Env1),  
@@ -378,7 +378,12 @@ eval_printseq(t_expr_printseq_print(E,Ps),Env,NewEnv,Val) :-
 
 eval_printseq(t_expr_print(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
 %-------------------------------------------------------------------------
-
+multiply_string(Val1, 1, Val1). 
+multiply_string(Val1, N, Val) :-  
+    N > 1, N1 is N - 1, multiply_string(Val1, N1, Val2),
+    atomic_concat(Val1, Val2, Val).
+multiply_string(_Val1, N, "") :-  
+    N =< 0.
 %--------------------------------------------------------------------------
 string_q(t_string(X)) --> [X],{ string(X)}.
 
