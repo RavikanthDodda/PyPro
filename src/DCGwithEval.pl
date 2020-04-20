@@ -8,8 +8,12 @@ commands(t_command(X)) --> command(X).
 
 %command(X) --> block(X).
 command(t_command_assign(Y)) --> assign(Y), [;].
+
 command(t_command_while(X,Y)) --> 
     [while], boolean(X), ['{'], commands(Y), ['}'].
+
+command(t_command_ternary(I,X,E1,E2)) -->
+    word(I),[=],boolean(X),[?],expr(E1),[:],expr(E2),[;].
 
 command(t_command_if(X,Y)) --> 
     [if], boolean(X), ['{'], commands(Y), ['}'].
@@ -42,6 +46,11 @@ eval_command(t_command(X,Y),Env,NewEnv) :-
 eval_command(t_command(X),Env,NewEnv) :- 
     eval_command(X,Env,NewEnv).
 
+eval_command(t_command_ternary(t_word(I),X,E1,_E2),Env,NewEnv):-
+    eval_boolean(X,Env,NewEnv1,true),eval_expr(E1,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
+eval_command(t_command_ternary(t_word(I),X,_E1,E2),Env,NewEnv):-
+    eval_boolean(X,Env,NewEnv1,false),eval_expr(E2,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
+    
 eval_command(t_command_if(X,Y),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 
