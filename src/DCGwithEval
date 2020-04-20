@@ -54,6 +54,8 @@ eval_command(t_command_el(X,Y,_Z),Env,NewEnv) :-
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 eval_command(t_command_el(X,_Y,Z),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,false),eval_command(Z,NewEnv1,NewEnv).
+eval_command(t_command_el(X,Y),Env,NewEnv) :- 
+    eval_boolean(X,Env,NewEnv1,true),eval_command(Y,NewEnv1,NewEnv).
 
 eval_command(t_command_else(X),Env,NewEnv) :- 
    	eval_command(X,Env,NewEnv).
