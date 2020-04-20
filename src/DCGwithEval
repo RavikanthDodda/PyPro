@@ -45,6 +45,9 @@ eval_command(t_command(X),Env,NewEnv) :-
 eval_command(t_command_if(X,Y),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 
+eval_command(t_command_if(X,_Y),Env,Env) :- 
+    eval_boolean(X,Env,Env,false). 
+
 eval_command(t_command_ifel(X,Y,_Z),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 eval_command(t_command_ifel(X,_Y,Z),Env,NewEnv) :- 
@@ -104,14 +107,14 @@ eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),write(Va
 boolean(t_b_true) --> [true].
 boolean(t_b_false) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
-boolean(t_b_equals(X,Y)) --> expr(X), [=], [=], expr(Y).
+boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
 boolean(t_b_l(X,Y)) --> expr(X), [<], expr(Y).
 boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
-boolean(t_b_lte(X,Y)) --> expr(X), [<], [=], expr(Y).
-boolean(t_b_gte(X,Y)) --> expr(X), [>], [=], expr(Y).
+boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
+boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
 
 eval_boolean(t_b_true,Env,Env,true).
 eval_boolean(t_b_false,Env,Env,false).
@@ -177,12 +180,12 @@ greaterEqual(Val1,Val2,false):- Val1 < Val2.
 :- table expr/3, term/3.
 
 assign(t_aAssign(I,Y)) --> word(I),[=], assign(Y).
-assign(t_aInc(I)) --> word(I), [+], [+].
-assign(t_aDec(I)) --> word(I), [-], [-].
-assign(t_aAdd(I,X)) --> word(I), [+], [=], assign(X).
-assign(t_aSub(I,X)) --> word(I), [-], [=], assign(X).
-assign(t_aMult(I,X)) --> word(I), [*], [=], assign(X).
-assign(t_aDiv(I,X)) --> word(I), [/], [=], assign(X).
+assign(t_aInc(I)) --> word(I), [++].
+assign(t_aDec(I)) --> word(I), [--].
+assign(t_aAdd(I,X)) --> word(I), [+=], assign(X).
+assign(t_aSub(I,X)) --> word(I), [-=], assign(X).
+assign(t_aMult(I,X)) --> word(I), [*=], assign(X).
+assign(t_aDiv(I,X)) --> word(I), [/=], assign(X).
 assign(X) --> expr(X).
 
 expr(t_add(X,Y)) --> expr(X),[+],term(Y).
@@ -382,3 +385,4 @@ string_q(t_string(X)) --> [X],{ string(X)}.
 keywords([+,-,>,<,=,while,for,if,elif,else,print]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
+
