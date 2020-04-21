@@ -21,9 +21,11 @@ command(t_command_ifel(X,Y,Z)) -->
     [if], boolean(X), ['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
-    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],['{'],commands(T),['}'].
+    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],
+    ['{'],commands(T),['}'].
 command(t_command_for(X,Y,Z,T)) --> 
-    [for], ['('],commands(X),[;],boolean(Y),[;],expr(Z),[')'],['{'],commands(T),['}'].
+    [for], ['('],assign(X),[;],boolean(Y),[;],assign(Z),[')'],
+    ['{'],commands(T),['}'].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
@@ -83,24 +85,29 @@ eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,NewEnv) :-
     (between(Val2, Val3, Val1)-> eval_command(T,Env2,Env3), 
     lookup(X,Env3,Val4),Val5 is Val4 + 1, update(X,Val5,Env3,Env4),
     eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,NewEnv);
-    writeln(2),NewEnv = Env).
+    NewEnv = Env).
 
 eval_command(t_command_for_range(t_word(X),Y,Z,T),Env,NewEnv) :-
     \+lookup(X,Env,_Val1),eval_expr(Y,Env,Val2,Env1),update(X,Val2,Env1,Env2), 
     eval_expr(Z,Env2,_Val3,Env3), 
     eval_command(T,Env3,Env4), 
-    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,NewEnv),writeln(1).
+    eval_command(t_command_for_range(t_word(X),Y,Z,T),Env4,NewEnv).
 
 eval_command(t_command_for(X,Y,Z,T), Env, NewEnv) :- 
-    eval_command(X,Env,NewEnv1),
+    eval_expr(X,Env,_Val1,NewEnv1),
     eval_boolean(Y,NewEnv1,NewEnv2,true),
     eval_command(T,NewEnv2,NewEnv3),
-    eval_expr(Z,NewEnv3,_Val,NewEnv4),
+    eval_expr(Z,NewEnv3,_Val2,NewEnv4),
     eval_command(t_command_for(Y,Z,T),NewEnv4,NewEnv).
+
+eval_command(t_command_for(X,Y,_Z,_T), Env, NewEnv) :- 
+    eval_expr(X,Env,_Val1,NewEnv1),
+    eval_boolean(Y,NewEnv1,NewEnv,false).
 
 eval_command(t_command_for(Y,Z,T), Env, NewEnv) :- 
     eval_boolean(Y,Env,NewEnv2,true),
-    eval_command(T,NewEnv2,NewEnv3),eval_expr(Z,NewEnv3,NewEnv4,_Val),
+    eval_command(T,NewEnv2,NewEnv3),
+    eval_expr(Z,NewEnv3,_Val,NewEnv4),
     eval_command(t_command_for(Y,Z,T),NewEnv4,NewEnv).
 
 eval_command(t_command_for(X,Y,_Z,_T), Env, NewEnv) :- 
@@ -108,7 +115,7 @@ eval_command(t_command_for(X,Y,_Z,_T), Env, NewEnv) :-
 eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :- 
     eval_boolean(Y,Env,NewEnv,false).
 
-eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),write(Val).
+eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(Val).
 %eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
 %--------------------------------------------------------------------------------
 :- table boolean/3.
@@ -399,4 +406,3 @@ string_q(t_string(X)) --> [X],{ string(X)}.
 keywords([+,-,>,<,=,while,for,if,elif,else,print]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
-
