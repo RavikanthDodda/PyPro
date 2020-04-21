@@ -383,16 +383,29 @@ update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
 
-printseq(t_expr_printseq_print(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
+printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
+printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
+printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
+printseq(t_expr_print_e(E)) --> 
+    \+printseq(t_expr_print_ep(_X,_Y)),
+    \+printseq(t_expr_print_pe(_Z,_T)),
+    expr(E).
 
-
-printseq(t_expr_print(E)) --> \+printseq(t_expr_printseq_print(_X,_Y)) ,expr(E).
-
-eval_printseq(t_expr_printseq_print(E,Ps),Env,NewEnv,Val) :-
+eval_printseq(t_expr_print_ep(E,Ps),Env,NewEnv,Val) :-
     eval_expr(E,Env,Val1,Env1), eval_printseq(Ps,Env1,NewEnv,Val2),
     atomic_concat(Val1, Val2, Val).
 
-eval_printseq(t_expr_print(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
+eval_printseq(t_expr_print_pe(Ps,E),Env,NewEnv,Val) :-
+    eval_expr(E,Env,Val1,NewEnv),
+    atomic_concat(Ps, Val1, Val).
+
+eval_printseq(t_expr_print_pez(P,E,Z),Env,NewEnv,Val) :-
+   	eval_expr(E,Env,Val1,Env1), 
+    atomic_concat(P, Val1, Val2),
+    eval_printseq(Z,Env1,NewEnv,Val3),
+    atomic_concat(Val2, Val3, Val).
+
+eval_printseq(t_expr_print_e(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
 %-------------------------------------------------------------------------
 multiply_string(Val1, 1, Val1). 
 multiply_string(Val1, N, Val) :-  
