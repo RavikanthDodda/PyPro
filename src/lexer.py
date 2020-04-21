@@ -38,7 +38,7 @@ class Lexer(Lexer):
     BRACE   = r'(\(|\)|\{|\})'
     COMMA   = r','
     
-    STRING = r'".*"'
+    STRING = r'"[^\"]*"'
     ID      = r'[a-zA-Z_][a-zA-Z0-9_]*'
     ID['if'] = IF
     ID['else'] = ELSE

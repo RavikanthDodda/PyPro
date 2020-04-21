@@ -50,7 +50,7 @@ eval_command(t_command_ternary(t_word(I),X,E1,_E2),Env,NewEnv):-
     eval_boolean(X,Env,NewEnv1,true),eval_expr(E1,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
 eval_command(t_command_ternary(t_word(I),X,_E1,E2),Env,NewEnv):-
     eval_boolean(X,Env,NewEnv1,false),eval_expr(E2,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
-    
+
 eval_command(t_command_if(X,Y),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
 
