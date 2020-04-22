@@ -121,8 +121,8 @@ eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(
 %--------------------------------------------------------------------------------
 :- table boolean/3.
 
-boolean(t_b_true(X)) --> [X], {true}.
-boolean(t_b_false(X)) --> [X], {false}.
+boolean(t_b(X)) --> bool(t_bool(X)).
+%boolean(t_b_false(X)) --> [X], {false}.
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
@@ -137,8 +137,7 @@ boolean(t_b_id(X)) --> expr(X).
 eval_boolean(t_b_id(t_word(X)),Env,NewEnv,Condition) :-
 	eval_expr(X,Env,Condition,NewEnv).
 
-eval_boolean(t_b_true(true),Env,Env,true).
-eval_boolean(t_b_false(false),Env,Env,false).
+eval_boolean(t_b(X),Env,Env,X).
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
