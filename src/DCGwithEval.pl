@@ -8,6 +8,7 @@ commands(t_command(X)) --> command(X).
 
 %command(X) --> block(X).
 command(t_command_assign(Y)) --> assign(Y), [;].
+%command(t_command_assignBool(Y)) --> assignBool(Y), [;].
 
 command(t_command_while(X,Y)) --> 
     [while], boolean(X), ['{'], commands(Y), ['}'].
@@ -120,8 +121,8 @@ eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(
 %--------------------------------------------------------------------------------
 :- table boolean/3.
 
-boolean(t_b_true) --> [true].
-boolean(t_b_false) --> [false].
+boolean(t_b(X)) --> bool(t_bool(X)).
+%boolean(t_b_false(X)) --> [X], {false}.
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
@@ -131,9 +132,12 @@ boolean(t_b_l(X,Y)) --> expr(X), [<], expr(Y).
 boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
+boolean(t_b_id(X)) --> expr(X).
 
-eval_boolean(t_b_true,Env,Env,true).
-eval_boolean(t_b_false,Env,Env,false).
+eval_boolean(t_b_id(X),Env,NewEnv,Condition) :-
+	eval_expr(X,Env,Condition,NewEnv).
+
+eval_boolean(t_b(X),Env,Env,X).
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
@@ -148,7 +152,6 @@ eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :-
 eval_boolean(t_b_and(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
     andCond(Val1,Val2,Condition).
-
 
 eval_boolean(t_b_or(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
@@ -171,15 +174,22 @@ eval_boolean(t_b_gte(X,Y),Env,NewEnv,Condtition) :-
 not(true, false).
 not(false,true).
 
-equal(Val1, Val2, true):- Val1 is Val2.
-equal(Val1, Val2, false):- \+ Val1 is Val2.
+equal(true, true, true).
+equal(false, false, true).
+equal(false, true, false).
+equal(true, false, false).
+
+equal(Val1, Val2, true):- number(Val1), number(Val2), Val1 is Val2.
+equal(Val1, Val2, false):- number(Val1), number(Val2), \+ Val1 is Val2.
 
 andCond(Val1,Val2,true):- Val1 = true, Val2 = true.
-andCond(Val1,Val2,false):- Val1 = false ; Val2 = false.
+andCond(Val1,Val2,false):- Val1 = false , Val2 = false.
+andCond(Val1,Val2,false):- Val1 = true , Val2 = false.
+andCond(Val1,Val2,false):- Val1 = false , Val2 = true.
 
-orCond(Val1,Val2, true):- Val1 = true; Val2 = true.
-orCond(Val1,Val2, true):- Val1 = true; Val2 = false.
-orCond(Val1,Val2, true):- Val1 = false; Val2 = true.
+orCond(Val1,Val2, true):- Val1 = true, Val2 = true.
+orCond(Val1,Val2, true):- Val1 = true, Val2 = false.
+orCond(Val1,Val2, true):- Val1 = false, Val2 = true.
 orCond(Val1,Val2, false):- Val1 = false, Val2 = false.
 
 lesser(Val1,Val2,true):- Val1 < Val2.
@@ -195,6 +205,7 @@ greaterEqual(Val1,Val2,false):- Val1 < Val2.
 %--------------------------------------------------------------------------------
 :- table expr/3, term/3.
 
+assign(t_aBool(I,X)) --> word(I), [=], boolean(X).
 assign(t_aAssign(I,Y)) --> word(I),[=], assign(Y).
 assign(t_aInc(I)) --> word(I), [++].
 assign(t_aDec(I)) --> word(I), [--].
@@ -217,9 +228,16 @@ paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
 
 % evaluate assignment statement
-eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
-    eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
+bool(t_bool(Y)):- Y = true.
     
+eval_expr(t_aBool(t_word(I),Y), Env, Val, NewEnv) :- 
+    eval_boolean(Y, Env,Env1, Val), update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
+    \+ bool(t_bool(Y)),
+    eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
+
+
 eval_expr(t_paren(X), Env, Val, NewEnv) :- eval_expr(X,Env, Val,NewEnv).
 
 eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-
@@ -368,6 +386,7 @@ eval_expr(X, Env, Val1, Env1),
     number(Val1), number(Val2),
     Val is Val1 mod Val2.
 
+eval_expr(t_bool(I), Env, I, Env).
 eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).
 eval_expr(t_num(X), Env, X, Env).
 eval_expr(t_string(X), Env, X, Env).
@@ -383,7 +402,7 @@ update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
 
-printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
+ printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
 printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
 printseq(t_expr_print_e(E)) --> 
@@ -415,7 +434,8 @@ multiply_string(_Val1, N, "") :-
     N =< 0.
 %--------------------------------------------------------------------------
 string_q(t_string(X)) --> [X],{ string(X)}.
-
-keywords([+,-,>,<,=,while,for,if,elif,else,print]).
+bool_keywords([true, false]).
+bool(t_bool(X)) --> [X] , {bool_keywords(BK), member(X,BK)}.
+keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
