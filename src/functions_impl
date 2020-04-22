@@ -2,13 +2,13 @@ program(P) --> commands(P).
 
 eval_program(P) :- eval_command(P,[],_).
 
-parameterList(t_parameter(X,Y)) --> parameter(X),[','], parameterList(Y).
-parameterList(X) --> parameter(X).
-parameter(X) --> word(X).
+parameterList(t_parameter(X,Y)) --> word(X),[','], parameterList(Y).
+parameterList(X) --> word(X).
 
-parameterList_call(t_parameter_call(X)) --> parameterList(X).
-parameterList_call(t_parameter_call(X,Y)) --> number(X), [','], parameterList_call(Y).
-parameterList_call(t_parameter_call(X)) --> number(X).
+
+parameterList_call(t_parameter_call(X,Y)) --> parameter_call(X), [','], parameterList_call(Y).
+parameterList_call(t_parameter_call(X)) --> parameter_call(X).
+parameter_call(X) --> number(X) | word(X).
 
 eval_parameter(t_word(X),[X]).
 eval_parameter(t_parameter(t_word(X),Y),[X|R]) :- eval_parameter(Y,R).

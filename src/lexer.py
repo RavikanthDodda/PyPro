@@ -61,6 +61,9 @@ class Lexer(Lexer):
     def COMMA(self,t):
         t.value = "'"+t.value+"'" 
         return t
+    def MODULO(self,t):
+        t.value = "'"+t.value+"'" 
+        return t
 
 if __name__ == '__main__':
     inp_file = open(sys.argv[1],"r")
