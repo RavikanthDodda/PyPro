@@ -1,6 +1,6 @@
 program(P) --> commands(P).
 
-eval_program(P,Y,Z) :- eval_command(P,Y,Z).
+eval_program(P) :- eval_command(P).
 
 %--------------------------------------------------------------------------------
 commands(t_command(X,Y)) --> command(X), commands(Y).
@@ -135,29 +135,20 @@ boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
 
+booleanTerm(t_b_num(X)) --> number(X).
+booleanTerm(t_b_word(X)) --> word(X).
+
 booleanBool(X) --> boolean(X).
-booleanBool(t_b_num(X)) --> number(X).
-booleanBool(t_b_word(X)) --> word(X).
+booleanBool(X) --> booleanTerm(X).
 
-booleanBool(t_b_boolAnd(X, t_b_num(Y))) --> boolean(X), [and], number(Y).
-booleanBool(t_b_boolAnd(t_b_num(X),Y)) --> number(X), [and], boolean(Y).
-booleanBool(t_b_boolOr(X, t_b_num(Y))) --> boolean(X), [or], number(Y).
-booleanBool(t_b_boolOr(t_b_num(X),Y)) --> number(X), [or], boolean(Y).
+booleanBool(t_b_boolAnd(X, Y)) --> boolean(X), [and], booleanTerm(Y).
+booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], boolean(Y).
+booleanBool(t_b_boolOr(X, Y)) --> boolean(X), [or], booleanTerm(Y).
+booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], boolean(Y).
 
-booleanBool(t_b_boolAnd(X, t_b_word(Y))) --> boolean(X), [and], word(Y).
-booleanBool(t_b_boolAnd(t_b_word(X),Y)) --> word(X), [and], boolean(Y).
-booleanBool(t_b_boolOr(X, t_b_word(Y))) --> boolean(X), [or], word(Y).
-booleanBool(t_b_boolOr(t_b_word(X),Y)) --> word(X), [or], boolean(Y).
+booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], booleanTerm(Y).
+booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], booleanTerm(Y).
 
-booleanBool(t_b_boolAnd(t_b_num(X),t_b_word(Y))) --> number(X), [and], word(Y).
-booleanBool(t_b_boolAnd(t_b_word(X), t_b_num(Y))) --> word(X), [and], number(Y).
-booleanBool(t_b_boolOr(t_b_num(X),t_b_word(Y))) --> number(X), [or], word(Y).
-booleanBool(t_b_boolOr(t_b_word(X), t_b_num(Y))) --> word(X), [or], number(Y).
-
-booleanBool(t_b_boolAnd(t_b_num(X), t_b_num(Y))) --> number(X), [and], number(Y).
-booleanBool(t_b_boolAnd(t_b_word(X),t_b_word(Y))) --> word(X), [and], word(Y).
-booleanBool(t_b_boolOr(t_b_num(X),t_b_num(Y))) --> number(X), [or], number(Y).
-booleanBool(t_b_boolOr(t_b_word(X),t_b_word(Y))) --> word(X), [or], word(Y).
 
 eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
     eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
