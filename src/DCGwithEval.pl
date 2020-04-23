@@ -1,6 +1,6 @@
 program(P) --> commands(P).
 
-eval_program(P) :- eval_command(P).
+eval_program(P) :- eval_command(P,[],_).
 
 %--------------------------------------------------------------------------------
 commands(t_command(X,Y)) --> command(X), commands(Y).
@@ -137,6 +137,7 @@ boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
 
 booleanTerm(t_b_num(X)) --> number(X).
 booleanTerm(t_b_word(X)) --> word(X).
+booleanTerm(t_b_string(X)) --> string_q(X).
 
 booleanBool(X) --> boolean(X).
 booleanBool(X) --> booleanTerm(X).
@@ -149,6 +150,8 @@ booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], boolean(Y).
 booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], booleanTerm(Y).
 booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], booleanTerm(Y).
 
+eval_boolean(t_b_string(X), Env,NewEnv, Condition) :-
+    eval_expr(X,Env,Val1,NewEnv), equal(Val1, "", Val2), not(Val2,Condition).
 
 eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
     eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
@@ -209,6 +212,9 @@ equal(true, true, true).
 equal(false, false, true).
 equal(false, true, false).
 equal(true, false, false).
+
+equal(Val1, Val2, true):- string(Val1), string(Val2), Val1 = Val2.
+equal(Val1, Val2, false):- string(Val1), string(Val2), \+ Val1 = Val2.
 
 equal(Val1, Val2, true):- number(Val1), number(Val2), Val1 is Val2.
 equal(Val1, Val2, false):- number(Val1), number(Val2), \+ Val1 is Val2.
