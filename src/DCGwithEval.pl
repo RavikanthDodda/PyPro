@@ -1,6 +1,6 @@
 program(P) --> commands(P).
 
-eval_program(P) :- eval_command(P,[],_).
+eval_program(P,Y,Z) :- eval_command(P,Y,Z).
 
 %--------------------------------------------------------------------------------
 commands(t_command(X,Y)) --> command(X), commands(Y).
@@ -11,29 +11,29 @@ command(t_command_assign(Y)) --> assign(Y), [;].
 %command(t_command_assignBool(Y)) --> assignBool(Y), [;].
 
 command(t_command_while(X,Y)) --> 
-    [while], boolean(X), ['{'], commands(Y), ['}'].
+    [while], booleanBool(X), ['{'], commands(Y), ['}'].
 
 command(t_command_ternary(I,X,E1,E2)) -->
-    word(I),[=],boolean(X),[?],expr(E1),[:],expr(E2),[;].
+    word(I),[=], booleanBool(X),[?],expr(E1),[:],expr(E2),[;].
 
 command(t_command_if(X,Y)) --> 
-    [if], boolean(X), ['{'], commands(Y), ['}'].
+    [if], booleanBool(X), ['{'], commands(Y), ['}'].
 command(t_command_ifel(X,Y,Z)) --> 
-    [if], boolean(X), ['{'], commands(Y), ['}'], command_el(Z).
+    [if], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
     [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],
     ['{'],commands(T),['}'].
 command(t_command_for(X,Y,Z,T)) --> 
-    [for], ['('],assign(X),[;],boolean(Y),[;],assign(Z),[')'],
+    [for], ['('],assign(X),[;], booleanBool(Y),[;],assign(Z),[')'],
     ['{'],commands(T),['}'].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
 command_el(t_command_el(X,Y)) --> 
-    [elif], boolean(X), ['{'], commands(Y), ['}'].
+    [elif], booleanBool(X), ['{'], commands(Y), ['}'].
 command_el(t_command_el(X,Y,Z)) --> 
-    [elif], boolean(X), ['{'], commands(Y), ['}'], command_el(Z). 
+    [elif], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z). 
 command_el(t_command_else(Y)) --> 
     [else], ['{'], commands(Y), ['}'].
 
@@ -119,12 +119,14 @@ eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :-
 eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(Val).
 %eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
 %--------------------------------------------------------------------------------
-:- table boolean/3.
+:- table boolean/3, booleanBool/3.
 
-boolean(t_b(X)) --> bool(t_bool(X)).
-%boolean(t_b_false(X)) --> [X], {false}.
+boolean(t_b_true()) --> [true].
+boolean(t_b_false()) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
+boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
+boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
@@ -132,18 +134,56 @@ boolean(t_b_l(X,Y)) --> expr(X), [<], expr(Y).
 boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
-boolean(t_b_id(X)) --> expr(X).
 
-eval_boolean(t_b_id(t_word(X)),Env,NewEnv,Condition) :-
+booleanBool(X) --> boolean(X).
+booleanBool(t_b_num(X)) --> number(X).
+booleanBool(t_b_word(X)) --> word(X).
+
+booleanBool(t_b_boolAnd(X, t_b_num(Y))) --> boolean(X), [and], number(Y).
+booleanBool(t_b_boolAnd(t_b_num(X),Y)) --> number(X), [and], boolean(Y).
+booleanBool(t_b_boolOr(X, t_b_num(Y))) --> boolean(X), [or], number(Y).
+booleanBool(t_b_boolOr(t_b_num(X),Y)) --> number(X), [or], boolean(Y).
+
+booleanBool(t_b_boolAnd(X, t_b_word(Y))) --> boolean(X), [and], word(Y).
+booleanBool(t_b_boolAnd(t_b_word(X),Y)) --> word(X), [and], boolean(Y).
+booleanBool(t_b_boolOr(X, t_b_word(Y))) --> boolean(X), [or], word(Y).
+booleanBool(t_b_boolOr(t_b_word(X),Y)) --> word(X), [or], boolean(Y).
+
+booleanBool(t_b_boolAnd(t_b_num(X),t_b_word(Y))) --> number(X), [and], word(Y).
+booleanBool(t_b_boolAnd(t_b_word(X), t_b_num(Y))) --> word(X), [and], number(Y).
+booleanBool(t_b_boolOr(t_b_num(X),t_b_word(Y))) --> number(X), [or], word(Y).
+booleanBool(t_b_boolOr(t_b_word(X), t_b_num(Y))) --> word(X), [or], number(Y).
+
+booleanBool(t_b_boolAnd(t_b_num(X), t_b_num(Y))) --> number(X), [and], number(Y).
+booleanBool(t_b_boolAnd(t_b_word(X),t_b_word(Y))) --> word(X), [and], word(Y).
+booleanBool(t_b_boolOr(t_b_num(X),t_b_num(Y))) --> number(X), [or], number(Y).
+booleanBool(t_b_boolOr(t_b_word(X),t_b_word(Y))) --> word(X), [or], word(Y).
+
+eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
+    eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
+
+eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
 	eval_expr(X,Env,Condition,NewEnv).
 
-eval_boolean(t_b(X),Env,Env,X).
+eval_boolean(t_b_boolAnd(X,Y),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
+    andCond(Val1,Val2,Condition).
+
+eval_boolean(t_b_boolOr(X,Y),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
+    orCond(Val1,Val2,Condition).
+
+eval_boolean(t_b_true(),Env,Env,true).
+eval_boolean(t_b_false(),Env,Env,false).
+
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
 eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_equalsBool(_X,_Y),Env,Env,true).
 
 eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
@@ -228,13 +268,13 @@ paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
 
 % evaluate assignment statement
-bool(t_bool(Y)):- Y = true.
+booleanCheck(t_b(Y)):- Y = true; Y = false.
     
 eval_expr(t_aBool(t_word(I),Y), Env, Val, NewEnv) :- 
     eval_boolean(Y, Env,Env1, Val), update(I,Val,Env1,NewEnv).
 
 eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
-    \+ bool(t_bool(Y)),
+    \+ booleanCheck(t_b(Y)),
     eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
 
 
@@ -402,7 +442,7 @@ update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
 
- printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
+printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
 printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
 printseq(t_expr_print_e(E)) --> 
