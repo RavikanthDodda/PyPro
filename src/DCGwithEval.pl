@@ -142,6 +142,8 @@ booleanTerm(t_b_string(X)) --> string_q(X).
 booleanBool(X) --> boolean(X).
 booleanBool(X) --> booleanTerm(X).
 
+booleanBool(t_b_boolNot(X)) --> [not], booleanTerm(X).
+
 booleanBool(t_b_boolAnd(X, Y)) --> boolean(X), [and], booleanTerm(Y).
 booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], boolean(Y).
 booleanBool(t_b_boolOr(X, Y)) --> boolean(X), [or], booleanTerm(Y).
@@ -158,6 +160,9 @@ eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
 
 eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
 	eval_expr(X,Env,Condition,NewEnv).
+
+eval_boolean(t_b_boolNot(X),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,NewEnv,Val1), not(Val1, Condition).
 
 eval_boolean(t_b_boolAnd(X,Y),Env,NewEnv,Condition) :-
 	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
