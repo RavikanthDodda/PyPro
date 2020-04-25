@@ -8,32 +8,33 @@ commands(t_command(X)) --> command(X).
 
 %command(X) --> block(X).
 command(t_command_assign(Y)) --> assign(Y), [;].
-%command(t_command_assignBool(Y)) --> assignBool(Y), [;].
 
 command(t_command_while(X,Y)) --> 
-    [while], booleanBool(X), ['{'], commands(Y), ['}'].
+    [while], boolean(X), ['{'], commands(Y), ['}'].
 
 command(t_command_ternary(I,X,E1,E2)) -->
-    word(I),[=], booleanBool(X),[?],expr(E1),[:],expr(E2),[;].
+    word(I),[=],boolean(X),[?],expr(E1),[:],expr(E2),[;].
+command(t_command_ternary(X,E1,E2)) -->
+    boolean(X),[?],expr(E1),[:],expr(E2),[;].
 
 command(t_command_if(X,Y)) --> 
-    [if], booleanBool(X), ['{'], commands(Y), ['}'].
+    [if], boolean(X), ['{'], commands(Y), ['}'].
 command(t_command_ifel(X,Y,Z)) --> 
-    [if], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z).
+    [if], boolean(X), ['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
     [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],
     ['{'],commands(T),['}'].
 command(t_command_for(X,Y,Z,T)) --> 
-    [for], ['('],assign(X),[;], booleanBool(Y),[;],assign(Z),[')'],
+    [for], ['('],assign(X),[;],boolean(Y),[;],assign(Z),[')'],
     ['{'],commands(T),['}'].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
 command_el(t_command_el(X,Y)) --> 
-    [elif], booleanBool(X), ['{'], commands(Y), ['}'].
+    [elif], boolean(X), ['{'], commands(Y), ['}'].
 command_el(t_command_el(X,Y,Z)) --> 
-    [elif], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z). 
+    [elif], boolean(X), ['{'], commands(Y), ['}'], command_el(Z). 
 command_el(t_command_else(Y)) --> 
     [else], ['{'], commands(Y), ['}'].
 
@@ -53,6 +54,10 @@ eval_command(t_command_ternary(t_word(I),X,E1,_E2),Env,NewEnv):-
     eval_boolean(X,Env,NewEnv1,true),eval_expr(E1,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
 eval_command(t_command_ternary(t_word(I),X,_E1,E2),Env,NewEnv):-
     eval_boolean(X,Env,NewEnv1,false),eval_expr(E2,NewEnv1,Val,NewEnv2),update(I,Val,NewEnv2,NewEnv).
+eval_command(t_command_ternary(X,_E1,E2),Env,NewEnv):-
+    eval_boolean(X,Env,NewEnv1,false),eval_expr(E2,NewEnv1,_Val,NewEnv).
+eval_command(t_command_ternary(X,E1,_E2),Env,NewEnv):-
+    eval_boolean(X,Env,NewEnv1,true),eval_expr(E1,NewEnv1,_Val,NewEnv).
     
 eval_command(t_command_if(X,Y),Env,NewEnv) :- 
     eval_boolean(X,Env,NewEnv1,true), eval_command(Y,NewEnv1,NewEnv). 
@@ -119,14 +124,12 @@ eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :-
 eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(Val).
 %eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
 %--------------------------------------------------------------------------------
-:- table boolean/3, booleanBool/3.
+:- table boolean/3.
 
-boolean(t_b_true()) --> [true].
-boolean(t_b_false()) --> [false].
+boolean(t_b_true) --> [true].
+boolean(t_b_false) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
-boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
-boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
@@ -135,54 +138,14 @@ boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
 
-booleanTerm(t_b_num(X)) --> number(X).
-booleanTerm(t_b_word(X)) --> word(X).
-booleanTerm(t_b_string(X)) --> string_q(X).
-
-booleanBool(X) --> boolean(X).
-booleanBool(X) --> booleanTerm(X).
-
-booleanBool(t_b_boolNot(X)) --> [not], booleanTerm(X).
-
-booleanBool(t_b_boolAnd(X, Y)) --> boolean(X), [and], booleanTerm(Y).
-booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], boolean(Y).
-booleanBool(t_b_boolOr(X, Y)) --> boolean(X), [or], booleanTerm(Y).
-booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], boolean(Y).
-
-booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], booleanTerm(Y).
-booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], booleanTerm(Y).
-
-eval_boolean(t_b_string(X), Env,NewEnv, Condition) :-
-    eval_expr(X,Env,Val1,NewEnv), equal(Val1, "", Val2), not(Val2,Condition).
-
-eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
-    eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
-
-eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
-	eval_expr(X,Env,Condition,NewEnv).
-
-eval_boolean(t_b_boolNot(X),Env,NewEnv,Condition) :-
-	eval_boolean(X,Env,NewEnv,Val1), not(Val1, Condition).
-
-eval_boolean(t_b_boolAnd(X,Y),Env,NewEnv,Condition) :-
-	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
-    andCond(Val1,Val2,Condition).
-
-eval_boolean(t_b_boolOr(X,Y),Env,NewEnv,Condition) :-
-	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
-    orCond(Val1,Val2,Condition).
-
-eval_boolean(t_b_true(),Env,Env,true).
-eval_boolean(t_b_false(),Env,Env,false).
-
+eval_boolean(t_b_true,Env,Env,true).
+eval_boolean(t_b_false,Env,Env,false).
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
 eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
-
-eval_boolean(t_b_equalsBool(_X,_Y),Env,Env,true).
 
 eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
@@ -191,6 +154,7 @@ eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :-
 eval_boolean(t_b_and(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
     andCond(Val1,Val2,Condition).
+
 
 eval_boolean(t_b_or(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
@@ -213,25 +177,15 @@ eval_boolean(t_b_gte(X,Y),Env,NewEnv,Condtition) :-
 not(true, false).
 not(false,true).
 
-equal(true, true, true).
-equal(false, false, true).
-equal(false, true, false).
-equal(true, false, false).
-
-equal(Val1, Val2, true):- string(Val1), string(Val2), Val1 = Val2.
-equal(Val1, Val2, false):- string(Val1), string(Val2), \+ Val1 = Val2.
-
-equal(Val1, Val2, true):- number(Val1), number(Val2), Val1 is Val2.
-equal(Val1, Val2, false):- number(Val1), number(Val2), \+ Val1 is Val2.
+equal(Val1, Val2, true):- Val1 is Val2.
+equal(Val1, Val2, false):- \+ Val1 is Val2.
 
 andCond(Val1,Val2,true):- Val1 = true, Val2 = true.
-andCond(Val1,Val2,false):- Val1 = false , Val2 = false.
-andCond(Val1,Val2,false):- Val1 = true , Val2 = false.
-andCond(Val1,Val2,false):- Val1 = false , Val2 = true.
+andCond(Val1,Val2,false):- Val1 = false ; Val2 = false.
 
-orCond(Val1,Val2, true):- Val1 = true, Val2 = true.
-orCond(Val1,Val2, true):- Val1 = true, Val2 = false.
-orCond(Val1,Val2, true):- Val1 = false, Val2 = true.
+orCond(Val1,Val2, true):- Val1 = true; Val2 = true.
+orCond(Val1,Val2, true):- Val1 = true; Val2 = false.
+orCond(Val1,Val2, true):- Val1 = false; Val2 = true.
 orCond(Val1,Val2, false):- Val1 = false, Val2 = false.
 
 lesser(Val1,Val2,true):- Val1 < Val2.
@@ -247,7 +201,6 @@ greaterEqual(Val1,Val2,false):- Val1 < Val2.
 %--------------------------------------------------------------------------------
 :- table expr/3, term/3.
 
-assign(t_aBool(I,X)) --> word(I), [=], boolean(X).
 assign(t_aAssign(I,Y)) --> word(I),[=], assign(Y).
 assign(t_aInc(I)) --> word(I), [++].
 assign(t_aDec(I)) --> word(I), [--].
@@ -261,25 +214,21 @@ expr(t_add(X,Y)) --> expr(X),[+],term(Y).
 expr(t_sub(X,Y)) --> expr(X),[-],term(Y).
 expr(X) --> term(X).
 
-term(t_mult(X,Y)) --> term(X),[*],paren(Y).
-term(t_div(X,Y)) --> term(X),[/],paren(Y).
-term(t_mod(X,Y)) --> term(X),['%'],paren(Y).
-term(X) --> paren(X).
+term(t_mult(X,Y)) --> term(X),[*],pow(Y).
+term(t_div(X,Y)) --> term(X),[/],pow(Y).
+term(t_mod(X,Y)) --> term(X),['%'],pow(Y).
+term(X) --> pow(X).
+
+pow(t_pow(X,Y)) --> paren(X),[^],pow(Y).
+pow(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
 
 % evaluate assignment statement
-booleanCheck(t_b(Y)):- Y = true; Y = false.
-    
-eval_expr(t_aBool(t_word(I),Y), Env, Val, NewEnv) :- 
-    eval_boolean(Y, Env,Env1, Val), update(I,Val,Env1,NewEnv).
-
 eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
-    \+ booleanCheck(t_b(Y)),
     eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
-
-
+    
 eval_expr(t_paren(X), Env, Val, NewEnv) :- eval_expr(X,Env, Val,NewEnv).
 
 eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-
@@ -307,131 +256,79 @@ eval_expr(t_aDiv(t_word(I),Y), Env, Val, NewEnv) :-
     update(I,Val,Env1,NewEnv).
 
 % evaluate addition, subtraction, division, multiplication
-eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
-    number(Val1), string(Val2),
-    writeln("int and string can not be concatenated"), fail.
-
-eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
-    string(Val1), number(Val2),
-    writeln("string and int can not be concatenated"), fail.
-
-
 eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
+	eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
+    string(Val1), \+string(Val2),
+    atomic_concat(Val1, Val2, Val) |
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
+    \+string(Val1), string(Val2),
+    atomic_concat(Val1, Val2, Val) | 
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
     \+string(Val1), \+string(Val2),
-    Val is Val1 + Val2.
-
-eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
+    Val is Val1 + Val2 |
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
     \+ number(Val1), \+ number(Val2), 
     atomic_concat(Val1, Val2, Val).
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("string and string can not be subtrated"), fail.
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("string and int can not be subtrated"), fail.
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("int and string can not be subtrated"), fail.
 
 eval_expr(t_sub(X,Y), Env, Val, NewEnv):-
 	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), number(Val2),
+    eval_type_check(Val1,Val2,subtraction,number,number),
     Val is Val1 - Val2.
 
 eval_expr(t_mult(X,Y), Env, _Val, NewEnv):-
 	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), string(Val2),
-    writeln("string and string can not be multiplied"), fail.
+    writeln("multiplication of string and string is not allowed"), fail.
 
 eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
+	eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), number(Val2),
-    multiply_string(Val1, Val2, Val).
-
-eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
+    multiply_string(Val1, Val2, Val) |
+    eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv),
     number(Val1), string(Val2),
-    multiply_string(Val2, Val1, Val).
-
-eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),  
-    eval_expr(Y, Env1, Val2, NewEnv), 
+    multiply_string(Val2, Val1, Val) |
+    eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv), 
     number(Val1), number(Val2),
     Val is Val1 * Val2.
 
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("string and string can not be divided"), fail.
-
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("string and int can not be divided"), fail.
-
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("int and string can not be divided"), fail.
-
 eval_expr(t_div(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), number(Val2),
+    eval_type_check(Val1,Val2,divison,number,number),
     Val is Val1 / Val2.
 
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
-
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
-
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
-
 eval_expr(t_mod(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv), 
-    number(Val1), number(Val2),
+    eval_type_check(Val1,Val2,modulus,number,number),
     Val is Val1 mod Val2.
 
-eval_expr(t_bool(I), Env, I, Env).
+eval_expr(t_pow(X,Y), Env, Val, NewEnv):-
+eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    eval_type_check(Val1,Val2,power,number,number),
+    Val is Val1 ^ Val2.
+
 eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).
 eval_expr(t_num(X), Env, X, Env).
 eval_expr(t_string(X), Env, X, Env).
+
+eval_type_check(Val1,Val2,_Op,string,number):- string(Val1),number(Val2). 
+eval_type_check(Val1,Val2,_Op,number,string):- number(Val1),string(Val2). 
+eval_type_check(Val1,Val2,_Op,number,number):- number(Val1),number(Val2). 
+eval_type_check(Val1,Val2,_Op,string,string):- string(Val1),string(Val2). 
+
+eval_type_check(Val1,Val2,Op,_,_):- 
+    \+string(Val1),\+number(Val2),write("Type Error: "),write(Op),writeln(" of number and string is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,_,_):- 
+    \+number(Val1),\+number(Val2),write("Type Error: "),write(Op),writeln(" of string and string is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,_,_):- 
+    \+number(Val1),\+string(Val2),write("Type Error: "),write(Op),writeln(" of string and number is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,_,_):- 
+    \+string(Val1),\+string(Val2),write("Type Error: "),write(Op),writeln(" of number and number is not allowed"), fail.
+
 
 % look for the variable value in the environment
 lookup(I, [(I,Val)|_], Val).
@@ -476,8 +373,7 @@ multiply_string(_Val1, N, "") :-
     N =< 0.
 %--------------------------------------------------------------------------
 string_q(t_string(X)) --> [X],{ string(X)}.
-bool_keywords([true, false]).
-bool(t_bool(X)) --> [X] , {bool_keywords(BK), member(X,BK)}.
-keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false]).
+
+keywords([+,-,>,<,=,while,for,if,elif,else,print]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
