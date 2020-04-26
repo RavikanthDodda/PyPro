@@ -22,7 +22,7 @@ command(t_command_ifel(X,Y,Z)) -->
     [if], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
-    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],
+    [for], word(X), [in], [range],['('],expr(Y),[','],expr(Z),[')'],
     ['{'],commands(T),['}'].
 command(t_command_for(X,Y,Z,T)) --> 
     [for], ['('],assign(X),[;], booleanBool(Y),[;],assign(Z),[')'],
