@@ -125,9 +125,16 @@ boolean(t_b_true()) --> [true].
 boolean(t_b_false()) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
+
+boolean(t_b_Eequals(X,Y)) --> expr(X), [==], boolean(Y).
+boolean(t_b_EnotEquals(X,Y)) --> expr(X), [!],[=], boolean(Y).
+boolean(t_b_Bequals(X,Y)) --> boolean(X), [==], expr(Y).
+boolean(t_b_BnotEquals(X,Y)) --> boolean(X), [!], [=], expr(Y).
+
 boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
 boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
+
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
 boolean(t_b_l(X,Y)) --> expr(X), [<], expr(Y).
@@ -177,6 +184,22 @@ eval_boolean(t_b_false(),Env,Env,false).
 
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
+
+eval_boolean(t_b_Eequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_boolean(Y,Env1,NewEnv,Val2), 
+    equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_Enotequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_boolean(Y,Env1,NewEnv,Val2), 
+    equal(Val1,Val2,V), not(V,Condition).
+
+eval_boolean(t_b_Bequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_expr(Y,Env1,Val2,NewEnv),
+    equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_Bnotequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_expr(Y,Env1,Val2,NewEnv),
+    equal(Val1,Val2,V), not(V,Condition).
 
 eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
@@ -476,8 +499,6 @@ multiply_string(_Val1, N, "") :-
     N =< 0.
 %--------------------------------------------------------------------------
 string_q(t_string(X)) --> [X],{ string(X)}.
-bool_keywords([true, false]).
-bool(t_bool(X)) --> [X] , {bool_keywords(BK), member(X,BK)}.
 keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
