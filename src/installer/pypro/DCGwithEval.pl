@@ -3,31 +3,31 @@ program(P) --> commands(P).
 eval_program(P) :- eval_command(P,[],_).
 
 %--------------------------------------------------------------------------------
-commands(t_command(X,Y)) --> command(X), commands(Y).
-commands(t_command(X)) --> command(X).
+commands(t_command(C,CL)) --> command(C), commands(CL).
+commands(t_command(C)) --> command(C).
 
-%command(X) --> block(X).
-command(t_command_assign(Y)) --> assign(Y), [;].
 
-command(t_command_while(X,Y)) --> 
-    [while], boolean(X), ['{'], commands(Y), ['}'].
+command(t_command_assign(A)) --> assign(A), [;].
+
+command(t_command_while(B,CL)) --> 
+    [while], boolean(B), ['{'], commands(CL), ['}'].
 
 command(t_command_ternary(I,X,E1,E2)) -->
     word(I),[=],boolean(X),[?],expr(E1),[:],expr(E2),[;].
 command(t_command_ternary(X,E1,E2)) -->
     boolean(X),[?],expr(E1),[:],expr(E2),[;].
 
-command(t_command_if(X,Y)) --> 
-    [if], boolean(X), ['{'], commands(Y), ['}'].
-command(t_command_ifel(X,Y,Z)) --> 
-    [if], boolean(X), ['{'], commands(Y), ['}'], command_el(Z).
+command(t_command_if(B,CL)) --> 
+    [if], boolean(B), ['{'], commands(CL), ['}'].
+command(t_command_ifel(B,CL,CE)) --> 
+    [if], boolean(B), ['{'], commands(CL), ['}'], command_el(CE).
 
-command(t_command_for_range(X,Y,Z,T))--> 
-    [for], word(X), [in], [range],['('],expr(Y),expr(Z),[')'],
-    ['{'],commands(T),['}'].
-command(t_command_for(X,Y,Z,T)) --> 
-    [for], ['('],assign(X),[;],boolean(Y),[;],assign(Z),[')'],
-    ['{'],commands(T),['}'].
+command(t_command_for_range(I,E1,E2,CL))--> 
+    [for], word(I), [in], [range],['('],expr(E1),expr(E2),[')'],
+    ['{'],commands(CL),['}'].
+command(t_command_for(A,B,A1,CL)) --> 
+    [for], ['('],assign(A),[;],boolean(B),[;],assign(A1),[')'],
+    ['{'],commands(CL),['}'].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
@@ -124,12 +124,14 @@ eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :-
 eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(Val).
 %eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
 %--------------------------------------------------------------------------------
-:- table boolean/3.
+:- table boolean/3, booleanBool/3.
 
-boolean(t_b_true) --> [true].
-boolean(t_b_false) --> [false].
+boolean(t_b_true()) --> [true].
+boolean(t_b_false()) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
+boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
+boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
@@ -138,14 +140,54 @@ boolean(t_b_g(X,Y)) --> expr(X), [>], expr(Y).
 boolean(t_b_lte(X,Y)) --> expr(X), [<=], expr(Y).
 boolean(t_b_gte(X,Y)) --> expr(X), [>=], expr(Y).
 
-eval_boolean(t_b_true,Env,Env,true).
-eval_boolean(t_b_false,Env,Env,false).
+booleanTerm(t_b_num(X)) --> number(X).
+booleanTerm(t_b_word(X)) --> word(X).
+booleanTerm(t_b_string(X)) --> string_q(X).
+
+booleanBool(X) --> boolean(X).
+booleanBool(X) --> booleanTerm(X).
+
+booleanBool(t_b_boolNot(X)) --> [not], booleanTerm(X).
+
+booleanBool(t_b_boolAnd(X, Y)) --> boolean(X), [and], booleanTerm(Y).
+booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], boolean(Y).
+booleanBool(t_b_boolOr(X, Y)) --> boolean(X), [or], booleanTerm(Y).
+booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], boolean(Y).
+
+booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], booleanTerm(Y).
+booleanBool(t_b_boolOr(X,Y)) --> booleanTerm(X), [or], booleanTerm(Y).
+
+eval_boolean(t_b_string(X), Env,NewEnv, Condition) :-
+    eval_expr(X,Env,Val1,NewEnv), equal(Val1, "", Val2), not(Val2,Condition).
+
+eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
+    eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
+
+eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
+	eval_expr(X,Env,Condition,NewEnv).
+
+eval_boolean(t_b_boolNot(X),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,NewEnv,Val1), not(Val1, Condition).
+
+eval_boolean(t_b_boolAnd(X,Y),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
+    andCond(Val1,Val2,Condition).
+
+eval_boolean(t_b_boolOr(X,Y),Env,NewEnv,Condition) :-
+	eval_boolean(X,Env,Env1,Val1),eval_boolean(Y,Env1,NewEnv,Val2),
+    orCond(Val1,Val2,Condition).
+
+eval_boolean(t_b_true(),Env,Env,true).
+eval_boolean(t_b_false(),Env,Env,false).
+
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
 eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_equalsBool(_X,_Y),Env,Env,true).
 
 eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
@@ -154,7 +196,6 @@ eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :-
 eval_boolean(t_b_and(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
     andCond(Val1,Val2,Condition).
-
 
 eval_boolean(t_b_or(X,Y),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,Env1,Val1), eval_boolean(Y,Env1,NewEnv,Val2), 
@@ -172,7 +213,6 @@ eval_boolean(t_b_lte(X,Y),Env,NewEnv,Condtition) :-
 eval_boolean(t_b_gte(X,Y),Env,NewEnv,Condtition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv),
     greaterEqual(Val1,Val2,Condtition).
-
 
 not(true, false).
 not(false,true).

@@ -7,7 +7,7 @@ class Lexer(Lexer):
     # Set of token names.   This is always required
     tokens = {  IN, IF, ELSE, ELIF, WHILE, FOR, FALSE, TRUE, PRINT, RANGE, ID, NUMBER, STRING, PLUS, MINUS, TIMES, MODULO,
                DIVIDE, ASSIGN, PASSIGN, MASSIGN, DASSIGN, TASSIGN, RASSIGN,  EQUAL, LE, GE, GT, LT, NOT, INC, DEC, COMMA  }
-    literals = { ';' }
+    literals = { ';' ,'?'}
     # Ignoring spaces, new lines and comments
     ignore = ' \t'
     ignore_newline = r'\n+'
@@ -53,17 +53,21 @@ class Lexer(Lexer):
     ID['range'] = RANGE
     ID['in'] = IN
    
-
+  
+    def ignore_newline(self, t):
+        self.lineno += len(t.value)
 
     def BRACE(self,t):
         t.value = "'"+t.value+"'" 
         return t
+
     def COMMA(self,t):
         t.value = "'"+t.value+"'" 
         return t
-    def MODULO(self,t):
-        t.value = "'"+t.value+"'" 
-        return t
+    
+    def error(self, t):
+        print("Invalid character '%s' at line: %d" % (t.value[0], self.lineno))
+        self.index += 1
 
 if __name__ == '__main__':
     inp_file = open(sys.argv[1],"r")
@@ -73,12 +77,13 @@ if __name__ == '__main__':
     tokenlist = "["
 
     for tok in lexer.tokenize(data):
-        print('type=%r, value=%r' % (tok.type, tok.value))
         tokenlist += tok.value + "," 
     
     tokenlist = tokenlist[:-1]
     tokenlist +=  "]"
-    print(tokenlist)
+
     prolog = Prolog() 
-    # prolog.consult('myfile.pl')
-    # print(list(prolog.query("program(P,"+tokenlist+", [])")
+    prolog.consult('DCGwithEval.pl')
+    t = list(prolog.query("program(P,"+tokenlist+", []),eval_program(P)"))
+    if not bool(t):
+        print("Runtime Error: Please check your code")

@@ -1,4 +1,4 @@
-x = 5;
+x = 2;
 # this is a comment
 y = 3;
 z = 1;
@@ -15,16 +15,12 @@ if x==y {
    }
 }
 
-s = "string"
+s = "string";
+z = 2 / 1;
 
-for i in range(2, 10){
-    print(i);
-}
-for(i = 0; i< 4; i++){
-    print(i);
+while x <5 {
+    z *= 5;
+    x++;
 }
 
-while x == 3 {
-    z = 5;
-    x--;
-}
+print(z);
