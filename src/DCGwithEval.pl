@@ -246,4 +246,4 @@ equal(Val1, Val2, false):- number(Val1), bool_keywords(Val2),
     writeln("Number and boolean can not be compared."), fail.
 
 equal(Val1, Val2, false):- string(Val1), bool_keywords(Val2), 
-    writeln("String and boolean can not be compared.").
+    writeln("String and boolean can not be compared."), fail.
