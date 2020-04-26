@@ -6,9 +6,7 @@ eval_program(P) :- eval_command(P,[],_).
 commands(t_command(X,Y)) --> command(X), commands(Y).
 commands(t_command(X)) --> command(X).
 
-%command(X) --> block(X).
 command(t_command_assign(Y)) --> assign(Y), [;].
-%command(t_command_assignBool(Y)) --> assignBool(Y), [;].
 
 command(t_command_while(X,Y)) --> 
     [while], booleanBool(X), ['{'], commands(Y), ['}'].
@@ -36,9 +34,6 @@ command_el(t_command_el(X,Y,Z)) -->
     [elif], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z). 
 command_el(t_command_else(Y)) --> 
     [else], ['{'], commands(Y), ['}'].
-
-
-% change declaration for,eval_command(P,[],0,S)).
 
 eval_command(t_command_assign(X),Env,NewEnv) :- 
     eval_expr(X,Env,_Val,NewEnv).
@@ -125,9 +120,16 @@ boolean(t_b_true()) --> [true].
 boolean(t_b_false()) --> [false].
 boolean(t_b_not(X)) --> [not], boolean(X).
 boolean(t_b_equals(X,Y)) --> expr(X), [==], expr(Y).
+
+boolean(t_b_Eequals(X,Y)) --> expr(X), [==], boolean(Y).
+boolean(t_b_EnotEquals(X,Y)) --> expr(X), [!],[=], boolean(Y).
+boolean(t_b_Bequals(X,Y)) --> boolean(X), [==], expr(Y).
+boolean(t_b_BnotEquals(X,Y)) --> boolean(X), [!], [=], expr(Y).
+
 boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
 boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
+
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
 boolean(t_b_or(X,Y)) --> boolean(X),[or],boolean(Y).
 boolean(t_b_l(X,Y)) --> expr(X), [<], expr(Y).
@@ -178,6 +180,22 @@ eval_boolean(t_b_false(),Env,Env,false).
 eval_boolean(t_b_not(X),Env,NewEnv,Condition) :- 
     eval_boolean(X,Env,NewEnv,Val1),not(Val1, Condition).
 
+eval_boolean(t_b_Eequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_boolean(Y,Env1,NewEnv,Val2), 
+    equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_Enotequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_expr(X,Env,Val1,Env1), eval_boolean(Y,Env1,NewEnv,Val2), 
+    equal(Val1,Val2,V), not(V,Condition).
+
+eval_boolean(t_b_Bequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_expr(Y,Env1,Val2,NewEnv),
+    equal(Val1,Val2,Condition).
+
+eval_boolean(t_b_Bnotequals(X,Y),Env,NewEnv,Condition) :- 
+    eval_boolean(X,Env,Env1,Val1), eval_expr(Y,Env1,Val2,NewEnv),
+    equal(Val1,Val2,V), not(V,Condition).
+
 eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
@@ -223,6 +241,18 @@ equal(Val1, Val2, false):- string(Val1), string(Val2), \+ Val1 = Val2.
 
 equal(Val1, Val2, true):- number(Val1), number(Val2), Val1 is Val2.
 equal(Val1, Val2, false):- number(Val1), number(Val2), \+ Val1 is Val2.
+
+equal(Val1, Val2, false):- number(Val1), bool_keywords(Val2), 
+    writeln("Number and boolean can not be compared."), fail.
+
+equal(Val1, Val2, false):- string(Val1), bool_keywords(Val2), 
+    writeln("String and boolean can not be compared."), fail.
+    
+equal(Val1, Val2, false):-  bool_keywords(Val1),number(Val2),
+    writeln("Boolean and Number can not be compared."), fail.
+
+equal(Val1, Val2, false):-  bool_keywords(Val1), string(Val2),
+    writeln("Boolean and String can not be compared."), fail.
 
 andCond(Val1,Val2,true):- Val1 = true, Val2 = true.
 andCond(Val1,Val2,false):- Val1 = false , Val2 = false.
@@ -443,7 +473,6 @@ update(Id, Val, [(Id,_)|T], [(Id,Val)|T]).
 update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
-
 printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
 printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
@@ -476,8 +505,8 @@ multiply_string(_Val1, N, "") :-
     N =< 0.
 %--------------------------------------------------------------------------
 string_q(t_string(X)) --> [X],{ string(X)}.
-bool_keywords([true, false]).
-bool(t_bool(X)) --> [X] , {bool_keywords(BK), member(X,BK)}.
+bool_keywords(true).
+bool_keywords(false).
 keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
