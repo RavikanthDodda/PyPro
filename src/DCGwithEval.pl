@@ -1,7 +1,21 @@
 program(P) --> commands(P).
 
 eval_program(P) :- eval_command(P,[],_).
+%--------------------------------------------------------------------------------
+%parameterList(t_parameter(X,Y)) --> word(X),[','], parameterList(Y).
+parameterList(X) --> word(X).
 
+parameterList_call(t_parameter_call(X,Y)) --> parameter_call(X), [','], parameterList_call(Y).
+parameterList_call(t_parameter_call(X)) --> parameter_call(X).
+parameter_call(X) --> number(X) | word(X).
+
+eval_parameter(t_word(X),[X]).
+eval_parameter(t_parameter(t_word(X),Y),[X|R]) :- eval_parameter(Y,R).
+
+eval_parameter_call(t_parameter_call(X),[R],Env,NewEnv) :- 
+    eval_expr(X,Env,R,NewEnv).
+eval_parameter_call(t_parameter_call(X,Y),[R1|R],Env,NewEnv) :- 
+    eval_expr(X,Env,R1,Env1), eval_parameter_call(Y,R,Env1,NewEnv).
 %--------------------------------------------------------------------------------
 commands(t_command(X,Y)) --> command(X), commands(Y).
 commands(t_command(X)) --> command(X).
@@ -10,14 +24,23 @@ command(t_command_assign(Y)) --> assign(Y), [;].
 
 command(t_command_while(X,Y)) --> 
     [while], booleanBool(X), ['{'], commands(Y), ['}'].
+command(t_command_while(X,Y)) --> 
+    [while], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'].
 
 command(t_command_ternary(I,X,E1,E2)) -->
     word(I),[=], booleanBool(X),[?],expr(E1),[:],expr(E2),[;].
+command(t_command_ternary(I,X,E1,E2)) -->
+    word(I),[=], ['('], booleanBool(X), [')'],[?],expr(E1),[:],expr(E2),[;].
 
 command(t_command_if(X,Y)) --> 
     [if], booleanBool(X), ['{'], commands(Y), ['}'].
 command(t_command_ifel(X,Y,Z)) --> 
     [if], booleanBool(X), ['{'], commands(Y), ['}'], command_el(Z).
+
+command(t_command_if(X,Y)) --> 
+    [if], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'].
+command(t_command_ifel(X,Y,Z)) --> 
+    [if], ['('], booleanBool(X), [')'] ,['{'], commands(Y), ['}'], command_el(Z).
 
 command(t_command_for_range(X,Y,Z,T))--> 
     [for], word(X), [in], [range],['('],expr(Y),[','],expr(Z),[')'],
@@ -25,6 +48,15 @@ command(t_command_for_range(X,Y,Z,T))-->
 command(t_command_for(X,Y,Z,T)) --> 
     [for], ['('],assign(X),[;], booleanBool(Y),[;],assign(Z),[')'],
     ['{'],commands(T),['}'].
+
+command(t_command_for(X,Y,Z,T)) --> 
+    [for], ['('],assign(X),[;], ['('], booleanBool(Y), [')'], [;],assign(Z),[')'],
+    ['{'],commands(T),['}'].
+
+command(t_method_decl(X,Y,Z)) --> [function], word(X),['('], parameterList(Y), [')'], 
+    ['{'], commands(Z), ['}'].
+
+command(t_method_call(X,Y)) --> word(X),['('], parameterList_call(Y), [')'],[;].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
 
@@ -35,6 +67,14 @@ command_el(t_command_el(X,Y,Z)) -->
 command_el(t_command_else(Y)) --> 
     [else], ['{'], commands(Y), ['}'].
 
+command_el(t_command_el(X,Y)) --> 
+    [elif], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'].
+command_el(t_command_el(X,Y,Z)) --> 
+    [elif], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'], command_el(Z). 
+command_el(t_command_else(Y)) --> 
+    [else], ['{'], commands(Y), ['}'].
+
+%--------------------------------------------------------------------------------
 eval_command(t_command_assign(X),Env,NewEnv) :- 
     eval_expr(X,Env,_Val,NewEnv).
 
@@ -112,7 +152,33 @@ eval_command(t_command_for(Y,_Z,_T), Env, NewEnv) :-
     eval_boolean(Y,Env,NewEnv,false).
 
 eval_command(t_print(X),Env,NewEnv) :- eval_printseq(X, Env,NewEnv,Val),writeln(Val).
-%eval_command(t_block(X,Y),Env,NewEnv):- eval_block(t_block(X,Y),Env,NewEnv).
+
+eval_command(t_method_decl(t_word(X),Y,Z),Env,NewEnv) :- \+ lookup(X,Env,_Val), 
+    update(X,t_method_decl(X,Y,Z),Env, NewEnv).
+eval_command(t_method_decl(t_word(X),_Y,_Z),Env,Env) :- lookup(X,Env,_Val), 
+    write(X),writeln(" function name is already defined."), fail.
+
+eval_command(t_method_call(t_word(X),Y),Env,NewEnv) :- lookup(X,Env,Method),
+    eval_method(Method,Y,Env,NewEnv).
+
+eval_method(t_method_decl(_X,Y,Z),U,Env,NewEnv) :- 
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,Env1),
+    length(L1,Len1), length(L2,Len2), 
+    Len1 = Len2, assignParam(L1,L2,Env1,Env2),
+    eval_command(Z,Env2,NewEnv).
+
+eval_method(t_method_decl(X,Y,_Z),U,Env,NewEnv) :- 
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,NewEnv),
+    length(L1,Len1), length(L2,Len2), 
+    Len1 \= Len2,
+    write("parameters does not match for function call "), 
+    writeln(X), fail.
+
+assignParam([],[],Env,Env).
+assignParam([H1|T1],[H2|T2],Env,NewEnv) :- \+lookup(H1,Env,_Val), 
+    update(H1,H2,Env,Env1), assignParam(T1,T2,Env1,NewEnv).
+assignParam([H1|_],[_|_],Env,_NewEnv) :- lookup(H1,Env,_Val), 
+    write("Variable "), write(H1), writeln(" is already defined."), fail.
 %--------------------------------------------------------------------------------
 :- table boolean/3, booleanBool/3.
 
@@ -470,6 +536,6 @@ multiply_string(_Val1, N, "") :-
 string_q(t_string(X)) --> [X],{ string(X)}.
 bool_keywords(true).
 bool_keywords(false).
-keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false]).
+keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false,function]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
