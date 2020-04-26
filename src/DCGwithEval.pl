@@ -285,16 +285,22 @@ assign(t_aAdd(I,X)) --> word(I), [+=], assign(X).
 assign(t_aSub(I,X)) --> word(I), [-=], assign(X).
 assign(t_aMult(I,X)) --> word(I), [*=], assign(X).
 assign(t_aDiv(I,X)) --> word(I), [/=], assign(X).
+assign(t_aDiv(I,X)) --> word(I), [/=], assign(X).
+assign(t_aIDiv(I,X)) --> word(I), [//=], assign(X).
 assign(X) --> expr(X).
 
 expr(t_add(X,Y)) --> expr(X),[+],term(Y).
 expr(t_sub(X,Y)) --> expr(X),[-],term(Y).
 expr(X) --> term(X).
 
-term(t_mult(X,Y)) --> term(X),[*],paren(Y).
-term(t_div(X,Y)) --> term(X),[/],paren(Y).
-term(t_mod(X,Y)) --> term(X),['%'],paren(Y).
-term(X) --> paren(X).
+term(t_mult(X,Y)) --> term(X),[*],pow(Y).
+term(t_div(X,Y)) --> term(X),[/],pow(Y).
+term(t_idiv(X,Y)) --> term(X),[//],pow(Y).
+term(t_mod(X,Y)) --> term(X),['%'],pow(Y).
+term(X) --> pow(X).
+
+pow(t_pow(X,Y)) --> paren(X),[^],pow(Y).
+pow(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
@@ -308,8 +314,7 @@ eval_expr(t_aBool(t_word(I),Y), Env, Val, NewEnv) :-
 eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
     \+ booleanCheck(t_b(Y)),
     eval_expr(Y, Env,Val, Env1), update(I,Val,Env1,NewEnv).
-
-
+    
 eval_expr(t_paren(X), Env, Val, NewEnv) :- eval_expr(X,Env, Val,NewEnv).
 
 eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-
@@ -336,132 +341,90 @@ eval_expr(t_aDiv(t_word(I),Y), Env, Val, NewEnv) :-
     eval_expr(t_div(t_word(I),Y), Env, Val, Env1),
     update(I,Val,Env1,NewEnv).
 
+eval_expr(t_aIDiv(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_idiv(t_word(I),Y), Env, Val, Env1),
+    update(I,Val,Env1,NewEnv).
+
 % evaluate addition, subtraction, division, multiplication
-eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
-    number(Val1), string(Val2),
-    writeln("int and string can not be concatenated"), fail.
-
-eval_expr(t_add(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
-    string(Val1), number(Val2),
-    writeln("string and int can not be concatenated"), fail.
-
-
 eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
+	eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
+    string(Val1), \+string(Val2),
+    atomic_concat(Val1, Val2, Val) |
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
+    \+string(Val1), string(Val2),
+    atomic_concat(Val1, Val2, Val) | 
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
     \+string(Val1), \+string(Val2),
-    Val is Val1 + Val2.
-
-eval_expr(t_add(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1), 
-    eval_expr(Y, Env1, Val2, NewEnv), 
+    Val is Val1 + Val2 |
+    eval_expr(X, Env, Val1, Env1), eval_expr(Y, Env1, Val2, NewEnv), 
     \+ number(Val1), \+ number(Val2), 
     atomic_concat(Val1, Val2, Val).
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("string and string can not be subtrated"), fail.
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("string and int can not be subtrated"), fail.
-
-eval_expr(t_sub(X,Y), Env, _Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("int and string can not be subtrated"), fail.
-
-eval_expr(t_sub(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), number(Val2),
-    Val is Val1 - Val2.
 
 eval_expr(t_mult(X,Y), Env, _Val, NewEnv):-
 	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), string(Val2),
-    writeln("string and string can not be multiplied"), fail.
+    writeln("Type Error: multiplication of string and string is not allowed"), fail.
 
 eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
+	eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv),
     string(Val1), number(Val2),
-    multiply_string(Val1, Val2, Val).
-
-eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-	eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
+    multiply_string(Val1, Val2, Val) |
+    eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv),
     number(Val1), string(Val2),
-    multiply_string(Val2, Val1, Val).
-
-eval_expr(t_mult(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),  
-    eval_expr(Y, Env1, Val2, NewEnv), 
+    multiply_string(Val2, Val1, Val) |
+    eval_expr(X, Env, Val1, Env1),eval_expr(Y, Env1, Val2, NewEnv), 
     number(Val1), number(Val2),
     Val is Val1 * Val2.
 
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+eval_expr(t_sub(X,Y), Env, Val, NewEnv):-
+	eval_expr(X, Env, Val1, Env1),
     eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("string and string can not be divided"), fail.
-
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("string and int can not be divided"), fail.
-
-eval_expr(t_div(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("int and string can not be divided"), fail.
+    eval_type_check(Val1,Val2,subtraction,number,number),
+    Val is Val1 - Val2.
 
 eval_expr(t_div(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), number(Val2),
+    eval_type_check(Val1,Val2,divison,number,number),
     Val is Val1 / Val2.
 
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
+eval_expr(t_idiv(X,Y), Env, Val, NewEnv):-
+	eval_expr(X, Env, Val1, Env1), 
     eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), string(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
-
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    string(Val1), number(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
-
-eval_expr(t_mod(X,Y), Env, _Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1),
-    eval_expr(Y, Env1, Val2, NewEnv),
-    number(Val1), string(Val2),
-    writeln("modulus of string and int can not be evaluated"), fail.
+    eval_type_check(Val1,Val2,int_divison,number,number),
+    Val is Val1 // Val2.
 
 eval_expr(t_mod(X,Y), Env, Val, NewEnv):-
-eval_expr(X, Env, Val1, Env1), 
+	eval_expr(X, Env, Val1, Env1),  
     eval_expr(Y, Env1, Val2, NewEnv), 
-    number(Val1), number(Val2),
+    eval_type_check(Val1,Val2,modulus,number,number),
     Val is Val1 mod Val2.
+
+eval_expr(t_pow(X,Y), Env, Val, NewEnv):-
+    eval_expr(X, Env, Val1, Env1), 
+    eval_expr(Y, Env1, Val2, NewEnv), 
+    eval_type_check(Val1,Val2,power,number,number),
+    Val is Val1 ^ Val2.
 
 eval_expr(t_bool(I), Env, I, Env).
 eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).
 eval_expr(t_num(X), Env, X, Env).
 eval_expr(t_string(X), Env, X, Env).
+
+eval_type_check(Val1,Val2,_Op,string,number):- string(Val1),number(Val2). 
+eval_type_check(Val1,Val2,_Op,number,string):- number(Val1),string(Val2). 
+eval_type_check(Val1,Val2,_Op,number,number):- number(Val1),number(Val2). 
+eval_type_check(Val1,Val2,_Op,string,string):- string(Val1),string(Val2). 
+
+eval_type_check(Val1,Val2,Op,string,number):- 
+    \+string(Val1),\+number(Val2),write("Type Error: "),write(Op),writeln(" of number and string is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,number,number):- 
+    \+number(Val1),\+number(Val2),write("Type Error: "),write(Op),writeln(" of string and string is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,number,string):- 
+    \+number(Val1),\+string(Val2),write("Type Error: "),write(Op),writeln(" of string and number is not allowed"), fail.
+eval_type_check(Val1,Val2,Op,string,string):- 
+    \+string(Val1),\+string(Val2),write("Type Error: "),write(Op),writeln(" of number and number is not allowed"), fail.
 
 % look for the variable value in the environment
 lookup(I, [(I,Val)|_], Val).
