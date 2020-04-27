@@ -530,18 +530,22 @@ printseq(t_expr_print_e(E)) -->
     \+printseq(t_expr_print_pe(_Z,_T)),
     expr(E).
 
-eval_printseq(t_expr_print_ep(E,Ps),Env,NewEnv,Val) :-
-    eval_expr(E,Env,Val1,Env1), eval_printseq(Ps,Env1,NewEnv,Val2),
+eval_printseq(t_expr_print_ep(E,P),Env,NewEnv,Val) :-
+    eval_expr(E,Env,Val1,Env1), eval_printseq(P,Env1,NewEnv,Val2),
     atomic_concat(Val1, Val2, Val).
 
-eval_printseq(t_expr_print_pe(Ps,E),Env,NewEnv,Val) :-
-    eval_expr(E,Env,Val1,NewEnv),
-    atomic_concat(Ps, Val1, Val).
+eval_printseq(t_expr_print_sp(S,P),Env,NewEnv,Val) :-
+    eval_printseq(P,Env,NewEnv,Val1),
+    atomic_concat(S, Val1, Val).
 
-eval_printseq(t_expr_print_pez(P,E,Z),Env,NewEnv,Val) :-
+eval_printseq(t_expr_print_se(S,E),Env,NewEnv,Val) :-
+    eval_expr(E,Env,Val1,NewEnv),
+    atomic_concat(S, Val1, Val).
+
+eval_printseq(t_expr_print_sep(S,E,P),Env,NewEnv,Val) :-
    	eval_expr(E,Env,Val1,Env1), 
-    atomic_concat(P, Val1, Val2),
-    eval_printseq(Z,Env1,NewEnv,Val3),
+    atomic_concat(S, Val1, Val2),
+    eval_printseq(P,Env1,NewEnv,Val3),
     atomic_concat(Val2, Val3, Val).
 
 eval_printseq(t_expr_print_e(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
