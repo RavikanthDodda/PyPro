@@ -523,11 +523,13 @@ update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
 printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
-printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
-printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
+printseq(t_expr_print_sp(S,P))--> [S], {string(S)}, [+], printseq(P).
+printseq(t_expr_print_se(S,E))--> [S], {string(S)}, [+], ['('],expr(E),[')'].
+printseq(t_expr_print_sep(S,E,P))--> [S], {string(S)}, [+], ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_e(E)) --> 
-    \+printseq(t_expr_print_ep(_X,_Y)),
-    \+printseq(t_expr_print_pe(_Z,_T)),
+    \+printseq(t_expr_print_ep(_,_)),
+    \+printseq(t_expr_print_sp(_,_)),
+    \+printseq(t_expr_print_se(_,_)),
     expr(E).
 
 eval_printseq(t_expr_print_ep(E,P),Env,NewEnv,Val) :-
