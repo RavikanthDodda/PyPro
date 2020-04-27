@@ -7,7 +7,7 @@ class Lexer(Lexer):
     # Set of token names.
     tokens   = {  IN, IF, ELSE, ELIF, WHILE, FOR, FALSE, TRUE, PRINT, RANGE, ID, NUMBER, STRING, PLUS, MINUS, TIMES, MODULO,
                DIVIDE, IDIVIDE, POW, ASSIGN, PASSIGN, MASSIGN, DASSIGN, IDASSIGN, TASSIGN, RASSIGN,  EQUAL, LE, GE, GT, LT, NOT, INC, DEC, COMMA  }
-    literals = { ';' ,'?', ':'}
+    literals = { ';' ,'?', ':','!'}
     # Ignoring spaces, new lines and comments
     ignore = ' \t'
     ignore_multicomment = r'\$([^$]*\n?)*\$'
