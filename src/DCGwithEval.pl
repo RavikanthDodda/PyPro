@@ -237,7 +237,10 @@ eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
     eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
 
 eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
-	eval_expr(X,Env,Condition,NewEnv).
+	eval_expr(X,Env,Val1,NewEnv), equal(Val1, "", Val2), not(Val2,Condition).
+
+eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
+	eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
 
 eval_boolean(t_b_boolNot(X),Env,NewEnv,Condition) :-
 	eval_boolean(X,Env,NewEnv,Val1), not(Val1, Condition).
