@@ -381,8 +381,11 @@ term(t_idiv(X,Y)) --> term(X),[//],pow(Y).
 term(t_mod(X,Y)) --> term(X),['%'],pow(Y).
 term(X) --> pow(X).
 
-pow(t_pow(X,Y)) --> paren(X),[^],pow(Y).
-pow(X) --> paren(X).
+pow(t_pow(X,Y)) --> uminus(X),[^],pow(Y).
+pow(X) --> uminus(X).
+
+uminus(t_umin(X)) --> [-],paren(X).
+uminus(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
@@ -498,6 +501,9 @@ eval_expr(t_pow(X,Y), Env, Val, NewEnv):-
     eval_expr(Y, Env1, Val2, NewEnv), 
     eval_type_check(Val1,Val2,power,number,number),
     Val is Val1 ^ Val2.
+
+eval_expr(t_umin(X),Env,Val,NewEnv):-
+    eval_expr(X,Env,Val1,NewEnv),Val is -1 * Val1.
 
 eval_expr(t_bool(I), Env, I, Env).
 eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).

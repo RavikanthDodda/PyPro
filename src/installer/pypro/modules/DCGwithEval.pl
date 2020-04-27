@@ -237,7 +237,13 @@ eval_boolean(t_b_num(X), Env,NewEnv, Condition) :-
     eval_expr(X,Env,Val1,NewEnv), equal(Val1, 0, Val2), not(Val2,Condition).
 
 eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
-	eval_expr(X,Env,Condition,NewEnv).
+	eval_expr(X,Env,Val1,NewEnv), string(Val1), equal(Val1, "", Val2), not(Val2,Condition).
+
+eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
+	eval_expr(X,Env,Val1,NewEnv), number(Val1), equal(Val1, 0, Val2), not(Val2,Condition).
+
+eval_boolean(t_b_word(X),Env,NewEnv,Condition) :-
+	eval_expr(X,Env,Condition,NewEnv), bool_keywords(Condition).
 
 eval_boolean(t_b_boolNot(X),Env,NewEnv,Condition) :-
 	eval_boolean(X,Env,NewEnv,Val1), not(Val1, Condition).
@@ -375,8 +381,11 @@ term(t_idiv(X,Y)) --> term(X),[//],pow(Y).
 term(t_mod(X,Y)) --> term(X),['%'],pow(Y).
 term(X) --> pow(X).
 
-pow(t_pow(X,Y)) --> paren(X),[^],pow(Y).
-pow(X) --> paren(X).
+pow(t_pow(X,Y)) --> uminus(X),[^],pow(Y).
+pow(X) --> uminus(X).
+
+uminus(t_umin(X)) --> [-],paren(X).
+uminus(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
@@ -493,6 +502,9 @@ eval_expr(t_pow(X,Y), Env, Val, NewEnv):-
     eval_type_check(Val1,Val2,power,number,number),
     Val is Val1 ^ Val2.
 
+eval_expr(t_umin(X),Env,Val,NewEnv):-
+    eval_expr(X,Env,Val1,NewEnv),Val is -1 * Val1.
+
 eval_expr(t_bool(I), Env, I, Env).
 eval_expr(t_word(I), Env, Val, Env):- lookup(I, Env, Val).
 eval_expr(t_num(X), Env, X, Env).
@@ -523,26 +535,19 @@ update(Id, Val, [H|T], [H|R]) :-
        H \= (Id,_), update(Id, Val,T,R).
 
 printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
-printseq(t_expr_print_pe(P,E))--> [P], {string(P)}, [+], ['('],expr(E),[')'].
-printseq(t_expr_print_pez(P,E,Z))--> [P], {string(P)}, [+], ['('],expr(E),[')'],[+], printseq(Z).
+printseq(t_expr_print_sp(S,P))--> [S], {string(S)}, [+], printseq(P).
 printseq(t_expr_print_e(E)) --> 
-    \+printseq(t_expr_print_ep(_X,_Y)),
-    \+printseq(t_expr_print_pe(_Z,_T)),
+    \+printseq(t_expr_print_ep(_,_)),
+    \+printseq(t_expr_print_sp(_,_)),
     expr(E).
 
-eval_printseq(t_expr_print_ep(E,Ps),Env,NewEnv,Val) :-
-    eval_expr(E,Env,Val1,Env1), eval_printseq(Ps,Env1,NewEnv,Val2),
+eval_printseq(t_expr_print_ep(E,P),Env,NewEnv,Val) :-
+    eval_expr(E,Env,Val1,Env1), eval_printseq(P,Env1,NewEnv,Val2),
     atomic_concat(Val1, Val2, Val).
 
-eval_printseq(t_expr_print_pe(Ps,E),Env,NewEnv,Val) :-
-    eval_expr(E,Env,Val1,NewEnv),
-    atomic_concat(Ps, Val1, Val).
-
-eval_printseq(t_expr_print_pez(P,E,Z),Env,NewEnv,Val) :-
-   	eval_expr(E,Env,Val1,Env1), 
-    atomic_concat(P, Val1, Val2),
-    eval_printseq(Z,Env1,NewEnv,Val3),
-    atomic_concat(Val2, Val3, Val).
+eval_printseq(t_expr_print_sp(S,P),Env,NewEnv,Val) :-
+    eval_printseq(P,Env,NewEnv,Val1),
+    atomic_concat(S, Val1, Val).
 
 eval_printseq(t_expr_print_e(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
 %-------------------------------------------------------------------------
