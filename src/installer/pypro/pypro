@@ -2,4 +2,4 @@
 
 File="$(realpath $1)"
 
-python3 /usr/local/lib/pypro/lexer.py $File
+python3 /usr/local/lib/pypro/main.py $File
