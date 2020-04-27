@@ -2,7 +2,7 @@ program(P) --> commands(P).
 
 eval_program(P) :- eval_command(P,[],_).
 %--------------------------------------------------------------------------------
-%parameterList(t_parameter(X,Y)) --> word(X),[','], parameterList(Y).
+parameterList(t_parameter(X,Y)) --> word(X),[','], parameterList(Y).
 parameterList(X) --> word(X).
 
 parameterList_call(t_parameter_call(X,Y)) --> parameter_call(X), [','], parameterList_call(Y).
