@@ -56,6 +56,11 @@ command(t_command_for(X,Y,Z,T)) -->
 command(t_method_decl(X,Y,Z)) --> [function], word(X),['('], parameterList(Y), [')'], 
     ['{'], commands(Z), ['}'].
 
+command(t_method_decl_ret(X,Y,Z,E)) --> [function],[return], word(X),['('], parameterList(Y), [')'], 
+    ['{'], commands(Z), 
+    [return], expr(E),[;],
+    ['}'].
+
 command(t_method_call(X,Y)) --> word(X),['('], parameterList_call(Y), [')'],[;].
 
 command(t_print(X)) --> [print], ['('],printseq(X),[')'],[;].
@@ -72,6 +77,13 @@ command_el(t_command_el(X,Y)) -->
 command_el(t_command_el(X,Y,Z)) --> 
     [elif], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'], command_el(Z). 
 
+%--------------------------------------------------------------------------------
+
+
+eval_command(t_method_decl_ret(t_word(X),Y,Z,E),Env,NewEnv) :- \+lookup(X,Env,_Val), 
+    update(X,t_method_decl_ret(X,Y,Z,E),Env, NewEnv).
+eval_command(t_method_decl_ret(t_word(X),_Y,_Z),Env,Env) :- lookup(X,Env,_Val), 
+    write(X),writeln(" function name is already defined."), fail.
 %--------------------------------------------------------------------------------
 eval_command(t_command_assign(X),Env,NewEnv) :- 
     eval_expr(X,Env,_Val,NewEnv).
@@ -368,10 +380,20 @@ pow(X) --> paren(X).
 
 paren(t_paren(X)) --> ['('], assign(X), [')'].
 paren(X) --> number(X) | string_q(X) | word(X).
+paren(t_method_call_ret(X,Y)) --> [evaluate],word(X),['('], parameterList_call(Y), [')'].
 
 % evaluate assignment statement
 booleanCheck(t_b(Y)):- Y = true; Y = false.
-    
+%--------------------------------------------------------------------------------
+eval_method(t_method_decl_ret(_X,Y,Z,E),U,Env,Val,NewEnv):-
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,Env1),
+    length(L1,Len1), length(L2,Len2), 
+	Len1 = Len2, assignParam(L1,L2,Env1,Env2),
+    eval_command(Z,Env2,Env3), eval_expr(E,Env3,Val,NewEnv).
+
+eval_expr(t_method_call_ret(t_word(X),Y),Env,Val,NewEnv) :- lookup(X,Env,Method),
+    eval_method(Method,Y,Env,Val,NewEnv). 
+%--------------------------------------------------------------------------------
 eval_expr(t_aBool(t_word(I),Y), Env, Val, NewEnv) :- 
     eval_boolean(Y, Env,Env1, Val), update(I,Val,Env1,NewEnv).
 
@@ -534,6 +556,6 @@ multiply_string(_Val1, N, "") :-
 string_q(t_string(X)) --> [X],{ string(X)}.
 bool_keywords(true).
 bool_keywords(false).
-keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false,function]).
+keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false,function,return]).
 number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
