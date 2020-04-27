@@ -71,8 +71,6 @@ command_el(t_command_el(X,Y)) -->
     [elif], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'].
 command_el(t_command_el(X,Y,Z)) --> 
     [elif], ['('], booleanBool(X), [')'], ['{'], commands(Y), ['}'], command_el(Z). 
-command_el(t_command_else(Y)) --> 
-    [else], ['{'], commands(Y), ['}'].
 
 %--------------------------------------------------------------------------------
 eval_command(t_command_assign(X),Env,NewEnv) :- 
