@@ -524,12 +524,9 @@ update(Id, Val, [H|T], [H|R]) :-
 
 printseq(t_expr_print_ep(E,P))--> ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_sp(S,P))--> [S], {string(S)}, [+], printseq(P).
-printseq(t_expr_print_se(S,E))--> [S], {string(S)}, [+], ['('],expr(E),[')'].
-printseq(t_expr_print_sep(S,E,P))--> [S], {string(S)}, [+], ['('],expr(E),[')'],[+], printseq(P).
 printseq(t_expr_print_e(E)) --> 
     \+printseq(t_expr_print_ep(_,_)),
     \+printseq(t_expr_print_sp(_,_)),
-    \+printseq(t_expr_print_se(_,_)),
     expr(E).
 
 eval_printseq(t_expr_print_ep(E,P),Env,NewEnv,Val) :-
@@ -539,16 +536,6 @@ eval_printseq(t_expr_print_ep(E,P),Env,NewEnv,Val) :-
 eval_printseq(t_expr_print_sp(S,P),Env,NewEnv,Val) :-
     eval_printseq(P,Env,NewEnv,Val1),
     atomic_concat(S, Val1, Val).
-
-eval_printseq(t_expr_print_se(S,E),Env,NewEnv,Val) :-
-    eval_expr(E,Env,Val1,NewEnv),
-    atomic_concat(S, Val1, Val).
-
-eval_printseq(t_expr_print_sep(S,E,P),Env,NewEnv,Val) :-
-   	eval_expr(E,Env,Val1,Env1), 
-    atomic_concat(S, Val1, Val2),
-    eval_printseq(P,Env1,NewEnv,Val3),
-    atomic_concat(Val2, Val3, Val).
 
 eval_printseq(t_expr_print_e(E),Env,NewEnv,Val):- eval_expr(E,Env,Val,NewEnv).
 %-------------------------------------------------------------------------
