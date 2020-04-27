@@ -1,0 +1,22 @@
+x = true;
+# this is a comment
+y = 3;
+z = 1;
+for(i=0;i<4;i++)
+{
+for(j=0; j<4; j++)
+{
+  if(i != j)
+  {
+  print(j);
+  }
+  y= y+3;
+}
+z = z*2;
+}
+
+s = "string";
+print(s);
+print(x);
+print("Value of X is: "+(x)+ "Value of Y is: " +(y));
+print("Hello "+"  "+ "Hello World");
