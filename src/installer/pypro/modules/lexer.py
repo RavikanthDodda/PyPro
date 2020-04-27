@@ -43,6 +43,7 @@ class Lexer(Lexer):
     COMMA   = r','
     
     STRING      = r'"[^\"]*"'
+    SSTRING     = r'\'[^\']*\''
     ID          = r'[a-zA-Z_][a-zA-Z0-9_]*'
     ID['if']    = IF
     ID['else']  = ELSE
@@ -71,6 +72,10 @@ class Lexer(Lexer):
 
     def MODULO(self,t):
         t.value = "'"+t.value+"'" 
+        return t
+    
+    def SSTRING(self,t):
+        t.value = '"'+t.value[1:-1]+'"'
         return t
     
     def error(self, t):
