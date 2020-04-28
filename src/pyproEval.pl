@@ -107,7 +107,14 @@ eval_command(t_method_call(t_word(X),Y),Env,NewEnv) :-
 eval_command(t_method_decl_ret(t_word(X),Y,Z,E),Env,NewEnv) :- 
     \+lookup(X,Env,_Val), 
     update(X,t_method_decl_ret(X,Y,Z,E),Env, NewEnv).
-eval_command(t_method_decl_ret(t_word(X),_Y,_Z),Env,Env) :- 
+eval_command(t_method_decl_ret(t_word(X),_Y,_Z,_E),Env,Env) :- 
+    lookup(X,Env,_Val), 
+    write(X),writeln(" function name is already defined."), fail.
+
+eval_command(t_method_decl_ret(t_word(X),Y,E),Env,NewEnv) :- 
+    \+lookup(X,Env,_Val), 
+    update(X,t_method_decl_ret(X,Y,E),Env, NewEnv).
+eval_command(t_method_decl_ret(t_word(X),_Y,_E),Env,Env) :- 
     lookup(X,Env,_Val), 
     write(X),writeln(" function name is already defined."), fail.
 
@@ -130,6 +137,24 @@ eval_method(t_method_decl_ret(_X,Y,Z,E),U,Env,Val,NewEnv):-
     length(L1,Len1), length(L2,Len2), 
 	Len1 = Len2, assignParam(L1,L2,Env1,Env2),
     eval_command(Z,Env2,Env3), eval_expr(E,Env3,Val,NewEnv).
+
+eval_method(t_method_decl_ret(X,Y,_Z,_E),U,Env,_Val,_NewEnv):-
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,_Env1),
+    length(L1,Len1), length(L2,Len2),  Len1 \= Len2,
+    write("parameters does not match for function call "), 
+    writeln(X), fail.
+
+eval_method(t_method_decl_ret(_X,Y,E),U,Env,Val,NewEnv):-
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,Env1),
+    length(L1,Len1), length(L2,Len2), 
+	Len1 = Len2, assignParam(L1,L2,Env1,Env2),
+    eval_expr(E,Env2,Val,NewEnv).
+
+eval_method(t_method_decl_ret(X,Y,_E),U,Env,_Val,_NewEnv):-
+    eval_parameter(Y,L1) , eval_parameter_call(U,L2,Env,_Env1),
+    length(L1,Len1), length(L2,Len2),  Len1 \= Len2,
+    write("parameters does not match for function call "), 
+    writeln(X), fail.
 
 % assignParam(ParameterList,ParameterList_call,Environment,Environment)
 % assigns values of called parameters to declared parameters.
