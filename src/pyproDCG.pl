@@ -189,4 +189,4 @@ number(t_num(X)) --> [X],{number(X)}.
 word(t_word(X)) --> [X],{atom(X),keywords(K),\+member(X,K)}.
 
 % the list of all the keywords used by the pypro language.
-keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false,function,return]).
+keywords([+,-,>,<,=,while,for,if,elif,else,print,true,false,function,return,and,or,not]).
