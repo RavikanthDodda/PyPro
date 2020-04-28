@@ -362,13 +362,25 @@ eval_expr(t_aAssign(t_word(I),Y), Env, Val, NewEnv) :-
 eval_expr(t_paren(X), Env, Val, NewEnv) :- 
     eval_expr(X,Env, Val,NewEnv).
 
-eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-
+eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-   
+    eval_expr(t_word(I), Env, Val, Env1), number(Val),
     eval_expr(t_add(t_word(I),t_num(1)), Env, Val, Env1), 
     update(I,Val,Env1,NewEnv).
 
+eval_expr(t_aInc(t_word(I)), Env, Val, NewEnv) :-   
+    eval_expr(t_word(I), Env, Val, NewEnv),
+    \+ number(Val),
+    writeln("String and bool can not be incremented"), fail.
+
 eval_expr(t_aDec(t_word(I)), Env, Val, NewEnv) :-
+    eval_expr(t_word(I), Env, Val, Env1), number(Val),
     eval_expr(t_sub(t_word(I),t_num(1)), Env, Val, Env1), 
     update(I,Val,Env1,NewEnv).
+
+eval_expr(t_aDec(t_word(I)), Env, Val, NewEnv) :-   
+    eval_expr(t_word(I), Env, Val, NewEnv),
+    \+ number(Val),
+    writeln("String and bool can not be incremented"), fail.
 
 eval_expr(t_aAdd(t_word(I),Y), Env, Val, NewEnv) :-
     eval_expr(t_add(t_word(I),Y), Env, Val, Env1),
