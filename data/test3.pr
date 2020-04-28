@@ -1,0 +1,15 @@
+x = 3;
+for(i=0;i<5;i++){
+    if x == 3{
+        print(i);
+        if 5>=5{
+            print(x);
+            if 3>5{
+                print(1);
+            }
+            else{
+                print(3);
+            }
+        }
+    }
+}

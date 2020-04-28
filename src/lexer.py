@@ -73,6 +73,10 @@ class Lexer(Lexer):
     def MODULO(self,t):
         t.value = "'"+t.value+"'" 
         return t
+
+    def RASSIGN(self,t):
+        t.value = "'"+t.value+"'" 
+        return t
     
     def SSTRING(self,t):
         t.value = '"'+t.value[1:-1]+'"'

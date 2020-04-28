@@ -1,3 +1,3 @@
 #!/bin/bash
-rm -r /usr/local/lib/pypro/
-rm /usr/local/bin/pypro
+rm -r /usr/lib/pypro/
+rm /usr/bin/pypro
