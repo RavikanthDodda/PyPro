@@ -114,6 +114,8 @@ boolean(t_b_BnotEquals(X,Y)) --> boolean(X), [!], [=], expr(Y).
 
 boolean(t_b_equalsBool(true, true)) --> [true], [==], [true].
 boolean(t_b_equalsBool(false, false)) --> [false], [==], [false].
+boolean(t_b_equalsBool(true, false)) --> [true], [==], [false].
+boolean(t_b_equalsBool(false, true)) --> [false], [==], [true].
 boolean(t_b_not_equals(X,Y)) --> expr(X), [!], [=], expr(Y).
 
 boolean(t_b_and(X,Y)) --> boolean(X),[and],boolean(Y).
