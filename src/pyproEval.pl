@@ -159,14 +159,9 @@ eval_method(t_method_decl_ret(X,Y,_E),U,Env,_Val,_NewEnv):-
 % assignParam(ParameterList,ParameterList_call,Environment,Environment)
 % assigns values of called parameters to declared parameters.
 assignParam([],[],Env,Env).
-assignParam([H1|T1],[H2|T2],Env,NewEnv) :- 
-    \+lookup(H1,Env,_Val), 
+assignParam([H1|T1],[H2|T2],Env,NewEnv) :-  
     update(H1,H2,Env,Env1), 
     assignParam(T1,T2,Env1,NewEnv).
-assignParam([H1|_],[_|_],Env,_NewEnv) :- 
-    lookup(H1,Env,_Val), 
-    write("Variable "), write(H1), 
-    writeln(" is already defined."), fail.
 
 % eval_parameter(ParseTree, List of Variable names) returns 
 % list variable names of the declared parameter.
