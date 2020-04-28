@@ -155,8 +155,8 @@ assign(t_aAdd(I,X)) --> word(I), [+=], assign(X).
 assign(t_aSub(I,X)) --> word(I), [-=], assign(X).
 assign(t_aMult(I,X)) --> word(I), [*=], assign(X).
 assign(t_aDiv(I,X)) --> word(I), [/=], assign(X).
-assign(t_aDiv(I,X)) --> word(I), [/=], assign(X).
 assign(t_aIDiv(I,X)) --> word(I), [//=], assign(X).
+assign(t_aMod(X,Y)) --> word(X),['%'],[=],assign(Y).
 assign(X) --> expr(X).
 
 expr(t_add(X,Y)) --> expr(X),[+],term(Y).
