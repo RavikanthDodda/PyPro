@@ -18,7 +18,7 @@ PyPro uses following languages and open source libraries:
 
 
 ### Installation
-Note: Currently, you can only install in linux based operating systems. But, you can still run the language in other operating systems as shown in running pypro. If you are using macOS, you may face issues while installing dependecies, but if you managed to install them correctly then you should be able to install and run the language.
+Note: Currently, you can only install in linux based operating systems. But, you can still run the language in other operating systems as shown in [running pypro](#running-pypro) section. If you are using macOS, you may face issues while installing dependecies, but if you managed to install them correctly then you should be able to install and run the language.
 
 Before installing make sure you have following dependencies installed correctly in your system:
 * [swi-prolog] - version 8.0.3 or higher (make sure it is in your PATH)
@@ -36,15 +36,21 @@ After you have installed all the above dependencies follow these instructions:
 $ cd src/installer/
 $ sudo ./install.sh
 ```
-
+To remove/uninstall PyPro, from project root folder:
+```sh
+$ cd src/installer/
+$ sudo ./uninstall.sh
+```
 ### Running PyPro
 
-You can run pypro in windows, macOs and linux operating systems without installing or building. First, make sure you have installed all the dependencies mentioned in [installation](#header2) section.
+You can run pypro in windows, macOs and linux operating systems without installing or building. First, make sure you have installed all the dependencies mentioned in [installation](#installation) section.
 
-After downloading zip or cloning the repository, From project root navigate to /src/ and from command prompt:
+After downloading zip or cloning the repository, From project root navigate to src/ and from command prompt:
 ```
 $ python3 pypro.py path/filename
 ```
+Here, filename is the name of the file with the appropriate code for pypro. It should have `.pr` extension.
+
 Example:
 ```
 $ python3 pypro.py ../data/test.pr
