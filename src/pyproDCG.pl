@@ -51,6 +51,9 @@ command(t_method_decl(X,Y,Z)) -->
 command(t_method_decl_ret(X,Y,Z,E)) --> 
     [function],[return], word(X),['('], parameterList(Y), [')'], 
     ['{'], commands(Z), [return], expr(E),[;],['}'].
+command(t_method_decl_ret(X,Y,E)) --> 
+    [function],[return], word(X),['('], parameterList(Y), [')'], 
+    ['{'], [return], expr(E),[;],['}'].
 
 command(t_method_call(X,Y)) --> 
     word(X),['('], parameterList_call(Y), [')'],[;].
