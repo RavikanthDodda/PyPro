@@ -11,8 +11,8 @@ Programming Languages and paradigms course project
 
 PyPro uses following languages and open source libraries:
 
-* [SWI-Prolog] - A declarative language we used for writing parser and  runtime.
-* [Python] - 
+* [SWI-Prolog] - A declarative language we used for writing parser and runtime.
+* [Python] - A language we used to do handle frontend part and lexical analysis.
 * [Sly] - A python library for doing lexical analysis and parsing.
 * [Pyswip] - A python library for interfacing between python and prolog.
 
