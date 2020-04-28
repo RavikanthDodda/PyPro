@@ -390,6 +390,10 @@ eval_expr(t_aIDiv(t_word(I),Y), Env, Val, NewEnv) :-
     eval_expr(t_idiv(t_word(I),Y), Env, Val, Env1),
     update(I,Val,Env1,NewEnv).
 
+eval_expr(t_aMod(t_word(I),Y), Env, Val, NewEnv) :-
+    eval_expr(t_mod(t_word(I),Y), Env, Val, Env1),
+    update(I,Val,Env1,NewEnv).
+
 % evaluate addition, subtraction, division, multiplication
 eval_expr(t_add(X,Y), Env, Val, NewEnv):-
 	eval_expr(X, Env, Val1, Env1), 
