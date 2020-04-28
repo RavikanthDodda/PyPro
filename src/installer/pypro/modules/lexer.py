@@ -1,6 +1,7 @@
 from sly import Lexer
 
 
+
 class Lexer(Lexer):
     err = False
     # Set of token names.
@@ -70,6 +71,10 @@ class Lexer(Lexer):
         return t
 
     def MODULO(self,t):
+        t.value = "'"+t.value+"'" 
+        return t
+
+    def RASSIGN(self,t):
         t.value = "'"+t.value+"'" 
         return t
     
