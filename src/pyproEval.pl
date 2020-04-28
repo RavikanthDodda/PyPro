@@ -380,7 +380,7 @@ eval_expr(t_aDec(t_word(I)), Env, Val, NewEnv) :-
 eval_expr(t_aDec(t_word(I)), Env, Val, NewEnv) :-   
     eval_expr(t_word(I), Env, Val, NewEnv),
     \+ number(Val),
-    writeln("String and bool can not be incremented"), fail.
+    writeln("String and bool can not be decremented"), fail.
 
 eval_expr(t_aAdd(t_word(I),Y), Env, Val, NewEnv) :-
     eval_expr(t_add(t_word(I),Y), Env, Val, Env1),
