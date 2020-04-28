@@ -7,16 +7,27 @@ Once all of our GitHub Pro accounts got activated to create private repositories
 
 At the beginning of developing grammar rules, we all came up with our own rules to meet the minimum requirement of the project. Then we came up with a refined grammar by modifying rules to better satisfy our needs. Then, Somesh additionally added function and comment rules to the grammar. We all met every day through Zoom which allowed us to think through the written rules and consistently kept on improving grammar considering suggestions from every team member.
 
-All of us did some search on Google to wrap up our mind to Lexer and Parser tools like BISON, ANTLR. To our surprise, nothing seemed easier than Prolog. Because of ANTLR’s capability to generate tokens and parse trees it made us think if we should use ANTLR for get things done easier and efficiently. But considering our team knowledge and understanding of Prolog, later we finalized to go with DCG and Prolog for parsing and providing semantics.
+All of us did some search on Google to wrap up our mind to Lexer and Parser tools like BISON, ANTLR. To our surprise, nothing seemed easier than Prolog. Ravikanth has previous experience on ANTLR which made us think if we should use ANTLR for lexer and parser. But considering our team knowledge and understanding of Prolog, later we finalized to go with DCG and Prolog for parsing and providing semantics.
 
 Ravikanth tried a Python library named “sly” to generate tokens and also identified a way to connect Python to Prolog. So, we now use “sly” to generate tokens.
 
 Suyog took the responsibility of writing the PDF document necessary to be submitted in Milestone 1.
 
-Finally, I am Narmada Ravali writing this document by recollecting all the phases that my team went through to successfully meet milestone 1 requirements. 
+Finally, I am Narmada Ravali writing this document by recollecting all the phases that my team went through to successfully meet milestone 1 requirements.
 
-Milestone 2:
-
-Instead of dividing whole modules like Lexer, Parser and Semantics among team members, we thought of splitting up the grammar rules among us to write Lexer, Parser and Semantics. That way every member will get a chance to work on every other aspect of the project and further help us resolve any programming issues that might occur collectively.
-
-
+Milestone 2: 
+ 
+I am Narmada Ravali, writing this document recollecting all the challenges my team went through to complete the project with functionalities above the basic requirements. At the beginning of milestone 2, we first planned to complete basic project requirements. On top of Assignment 3, ternary operator, if then else, for and while loops, print statement, datatypes like string and boolean are to be implemented.
+I took the responsibility to implement a print statement.Ravikanth implemented the ternary operator and worked on Lexer to generate tokens. Suyog took responsibility to work on increment, decrement assignment operations and to support boolean data type.
+Somesh modified Assignment 3 to incorporate our project-specific requirements, he also worked on implementing different types of for loops, nested if-else statements. Ravikanth added functionality to Lexer to identify and ignore the single line and multiline comments.
+ 
+While meeting basic requirements we have identified a good number of bugs that are already pushed into Github. Somesh has fixed multiple issues like multiplication and division issue, an issue when only one if-command is present, an issue with a print statement.
+Likewise, Ravikanth kept on working on Lexer to meet the project needs like identifying string tokens, not-equal-to operator and fixing issues related to modulo token, for loops. He has also added the capability to lexer and evaluator to report syntax and runtime errors with line numbers.
+The same way, Suyog worked on boolean conditional statements and to support it as a datatype as well. He went on adding functionalities to support boolean-not, string and integer to a conditional statement. While implementing these he fixed issues related to boolean comparisons. On Whole, three of my teammates have made a huge contribution to this project.
+While I helped my team identify a good number of bugs. All three of them fixed those bugs spontaneously. Finally, Ravikanth worked on the installer.
+ 
+One uncomfortable issue we encountered is connecting Python with Prolog on MacOs. To our surprise, MacOs has some issues (not going into detail) with pyswip library, which forms a bridge between Python and Prolog. Three of my teammates are using Mac including me.
+Ravikanth is the only one who is working on Linux, pyswip isn’t causing any issues on Linux. He checked and confirmed that our program is executing fine on Linux and Windows operating systems.
+I took an Amazon Ec2 instance with Red Hat Linux, it’s working fine on this system as well. Somesh installed Ubuntu and confirmed the program is executing successfully.
+ 
+After adding a good number of functionalities to the basic requirements, we thought of implementing functions as well. Somesh added rules for supporting function calls, method declarations, methods with return types. And Ravikanth worked on Lexer and evaluator to support unary minus as well..
