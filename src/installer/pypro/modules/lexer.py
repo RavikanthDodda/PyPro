@@ -1,7 +1,6 @@
 from sly import Lexer
 
 
-
 class Lexer(Lexer):
     err = False
     # Set of token names.
