@@ -252,7 +252,8 @@ eval_boolean(t_b_equals(X,Y),Env,NewEnv,Condition) :-
     eval_expr(Y,Env1,Val2,NewEnv), 
     equal(Val1,Val2,Condition).
 
-eval_boolean(t_b_equalsBool(_X,_Y),Env,Env,true).
+eval_boolean(t_b_equalsBool(X,Y),Env,Env,Condition) :- 
+   equal(X,Y,Condition).
 
 eval_boolean(t_b_not_equals(X,Y),Env,NewEnv,Condition) :- 
     eval_expr(X,Env,Val1,Env1), 
