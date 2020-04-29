@@ -58,6 +58,10 @@ $ python3 pypro.py ../data/test.pr
 ```
 Note: you may need to use `python` instead of `python3` if you are using windows.
 
+### Youtube link
+
+Here is the [youtube video](https://youtu.be/eiWo0r7FkyI) link where we go through the project.
+
 [SWI-Prolog]: <https://www.swi-prolog.org/>
 [Python]: <https://www.python.org/>
 [Sly]: <https://sly.readthedocs.io/en/latest/>
