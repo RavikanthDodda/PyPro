@@ -13,8 +13,8 @@ PyPro uses following languages and open source libraries:
 
 * [SWI-Prolog] - A declarative language we used for writing parser and runtime.
 * [Python] - A language we used to do handle frontend part and lexical analysis.
-* [Sly] - A python library for doing lexical analysis and parsing.
-* [Pyswip] - A python library for interfacing between python and prolog.
+* [Sly] - A python library we used to do lexical analysis.
+* [Pyswip] - A python library we used for interfacing between python and prolog.
 
 
 ### Installation
@@ -25,6 +25,7 @@ Before installing make sure you have following dependencies installed correctly 
 * [python] - 3.6 or higher
 * sly - `pip3 install sly`
 * [pyswip]
+
 Clicking on the links above will take you to the respective installation pages.
 Note: you may need to use `pip` instead of `pip3` if you are using windows.
 
