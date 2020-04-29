@@ -60,7 +60,7 @@ Note: you may need to use `python` instead of `python3` if you are using windows
 
 ### Youtube link
 
-Here is the [youtube video](https://youtu.be/eiWo0r7FkyI) link where we go through the project.
+Here is the [youtube video](https://youtu.be/25r8BY_Id9M) link where we go through the project.
 
 [SWI-Prolog]: <https://www.swi-prolog.org/>
 [Python]: <https://www.python.org/>
