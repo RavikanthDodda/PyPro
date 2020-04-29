@@ -21,23 +21,18 @@ if file_ext == ".pr":
             if tokenlist == "]":
                 tokenlist = "[]"
             # Interfacing with prolog
+            print(tokenlist)
             prolog = Prolog()
             prolog.consult('/usr/lib/pypro/modules/pyproDCG.pl')
             prolog.consult('/usr/lib/pypro/modules/pyproEval.pl')
             if not lexer.err:
-                # Querying for parse tree by passing tokenslist
+                # Querying for parse tree and semantics evaluation by passing tokenlist
                 ast = list(prolog.query(
                     "program(P,"+tokenlist+", [])"))
-                # Checking for syntax errors
+                print(ast[0])
+                # Checking for syntax/runtime errors
                 if not bool(ast) and tokenlist != "[]":
-                    print("Syntax Error: Please check the code")
-                else:
-                    # Querying for semantics and runtime by passing parsetree
-                    result = list(prolog.query(
-                    "eval_program("+ ast[0]['P']+")"))
-                    # Checking for runtime errors
-                    if not bool(result):
-                        print("Runtime Error: Please check the code")
+                    print("Syntax/Runtime Error: Please check the code")
     except FileNotFoundError:
         print("No such file in path:", sys.argv[1])
 else:
