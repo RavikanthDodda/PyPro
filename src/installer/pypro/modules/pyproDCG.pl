@@ -132,7 +132,7 @@ booleanTerm(t_b_string(X)) --> string_q(X).
 booleanBool(X) --> boolean(X).
 booleanBool(X) --> booleanTerm(X).
 
-booleanBool(t_b_boolNot(X)) --> [not], booleanTerm(X).
+booleanBool(t_b_boolNot(X)) --> [not], booleanBool(X).
 
 booleanBool(t_b_boolAnd(X, Y)) --> boolean(X), [and], booleanTerm(Y).
 booleanBool(t_b_boolAnd(X,Y)) --> booleanTerm(X), [and], boolean(Y).
