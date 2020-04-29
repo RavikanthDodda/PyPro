@@ -1,0 +1,15 @@
+n = 5;
+
+# this function computes factorial of an integer
+function return factorial(i){    
+    if(i > 0){ 
+        d = i - 1;
+        y = i * evaluate factorial(d);
+    } 
+    else{
+        y = 1;
+    }
+    return y; 
+}
+z = evaluate factorial(n);
+print("factorial of " + (n) + " is " + (z));

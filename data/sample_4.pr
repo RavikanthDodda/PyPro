@@ -1,0 +1,28 @@
+i = 2;
+j = "SER502";
+if ( i and j){
+    print("i and j are true");
+    print((i) +" "+ (j));
+}
+
+x = "";
+if ( not x ){
+    print("string x is empty, so (not x) is true");
+}
+    
+if ("string123"){
+    print("string123");
+}
+    
+a = true;
+b = 1;
+if (a and b){
+    print((a) + " and " + (b) + " is true");
+}
+    
+a = false;
+b = 0;
+
+if (not a and b){
+    print("not of (false and 0) is true");
+}

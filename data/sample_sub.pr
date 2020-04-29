@@ -1,0 +1,14 @@
+y = 2;
+print("y --> " + (y));
+
+y--;
+print("y-- --> " + (y));
+
+sub = y - 2;
+print("sub = y - 2 -->" + (sub));
+
+sub_2 = sub - y;
+print("sub_2 = sub - y --> " + (sub_2));
+
+sub_2 -= y;
+print("sub_2 -= y --> " + (sub_2));

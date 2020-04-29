@@ -1,0 +1,19 @@
+y = 5;
+print("y - " + (y));
+
+div = y / 2;
+print("div = y / 2 --> " + (div));
+
+div_2 = div / y;
+print("div_2 = div / y --> " + (div_2));
+
+x = 8;
+
+div_3 = x // y;
+print("div_2 = x // y --> " + (div_2));
+
+div_2 /= y;
+print("div_2 /= y --> " + (div_2));
+
+div_3 //= y;
+print("div_2 //= y --> " + (div_2));

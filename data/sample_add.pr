@@ -1,0 +1,27 @@
+x = true; 
+print("x - " + (x));
+
+y = 2;
+print("y - " + (y));
+
+z = "string";
+print("z - " + (z));
+
+y++;
+print("y++ - " + (y));
+
+add = y + 2;
+print("add = y + 2 -->" + (add));
+
+add_2 = add + y;
+print("add_2 = add+ y --> " + (add_2));
+
+add_2 += y;
+print("add_2 += y --> " + (add_2));
+
+add_3 = z + " second string";
+print("z + second string --> " + (add_3));
+
+add_3 += " third string";
+print("add_3 += third string --> " + (add_3));
+

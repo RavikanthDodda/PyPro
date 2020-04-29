@@ -1,0 +1,17 @@
+x = true; 
+print("x - " + (x));
+
+y = 2;
+print("y - " + (y));
+
+z = "string";
+print("z - " + (z));
+
+mul = y * 2;
+print("add = y + 2 -->" + (mul));
+
+mul_2 = mul * y;
+print("mul_2 = mul + y --> " + (mul_2));
+
+mul_2 *= y;
+print("mul_2 += y --> " + (mul_2));

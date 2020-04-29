@@ -1,0 +1,54 @@
+# Nested while loop with complicated functions
+print("Nested while loop with complicated functions");
+i = 2;
+while(i < 10) {
+   j = 2;
+   while(j <= i/j) {
+        j++; 
+      
+        if (j > i/j) {
+            print ((i) + " <- i is this one");
+        }
+   }
+   i++;
+}
+print("");
+
+# Nested traditional for loop
+print("Nested for loop");
+for(i = 10; i <= 20; i += 10){
+    for(j = 1; j < i; j *= 2){
+        print("(i,j) --> (" + (i)+","+(j)+")");
+    }
+}
+
+# Nested range for loop
+print("Nested range for loop");
+for l in range(2,20){
+    x = l % 2;
+    print("x --> " + (x));
+    for p in range(0,l){
+        k = p * 20 / 2 + 3;
+        print("k --> " + (k));
+    }
+}
+
+# Nested loops and if
+print("Nested loops and if");
+max = 100;
+n = 0;
+m = 0;
+while(i < max){
+    if(i % 2 == 0){
+        n++;
+        i += 10;
+    }
+    else{
+        for(k = 10; k < i; k++){
+            m++;
+        }
+        i += 10;
+    }
+}
+
+print("n - " + (n) + "m - " + (m));

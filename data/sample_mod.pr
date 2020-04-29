@@ -1,0 +1,11 @@
+y = 2;
+print("y --> " + (y));
+
+mod = y % 2;
+print("mod = y % 2 -->" + (mod));
+
+mod_2 = mod % y;
+print("mod_2 = mod % y --> " + (mod_2));
+
+mod_2 %= y;
+print("mod_2 %= y --> " + (mod_2));

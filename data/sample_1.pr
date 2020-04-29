@@ -1,0 +1,79 @@
+x = 0;
+y = "string1";
+z = true;
+
+# if else and if
+print("if else and if");
+if(z == true){
+     print("inside if");
+    if(x <= 0){
+        print("inside nested if");
+    }
+}
+else{
+    print("inside else");
+}
+
+#if elif else
+print("if elif else");
+if(y == "string2"){
+    print("inside if");
+}
+elif(y == "string1"){
+    print("inside elif");
+}
+else{
+    print("inside else");
+}
+
+# for traditional
+print("Traditional for loop.");
+for(i = 0; i < 10; i++){
+    print("i - " + (i));
+}
+
+# for variable in range
+print("range for loop.");
+for i in range(0,10){
+    print("i - " + (i));
+}
+
+# while loop
+print("while loop.");
+w = 20;
+while(w >= 0){
+    print("w - " + (w));
+    w--;
+}
+
+# function declaration without return value
+print("function declaration without return value");
+function findMax(x1,y1,z1){
+    if(x1 > y1){
+        if(x1 > z1){
+            print("Max number is " + (x1));
+        }
+        else{
+             print("Max number is " + (z1));
+        }
+    }
+    elif(y1 > z1){
+         print("Max number is " + (y1));
+    }
+    else{
+        print("Max number is " + (z1));
+    }
+}
+
+print("calling function findMax(10,20,30)");
+findMax(10,20,30);
+
+# function declaration with return value
+print("function declaration with return value");
+function return add(x,y){
+    return x + y;
+}
+
+print("calling addxy = function add(10,20)");
+addxy = evaluate add(10,20);
+print("addxy = " + (addxy));
