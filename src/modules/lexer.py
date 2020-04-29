@@ -5,7 +5,7 @@ from sly import Lexer
 class Lexer(Lexer):
     err = False
     # Set of token names.
-    tokens   = {  IN, IF, ELSE, ELIF, WHILE, FOR, FALSE, TRUE, PRINT, RANGE, ID, NUMBER, STRING, PLUS, MINUS, TIMES, MODULO,
+    tokens   = {  IN, IF, ELSE, ELIF, WHILE, FOR, FALSE, TRUE, PRINT, RANGE, ID, NUMBER, FNUMBER, STRING, PLUS, MINUS, TIMES, MODULO,
                DIVIDE, IDIVIDE, POW, ASSIGN, PASSIGN, MASSIGN, DASSIGN, IDASSIGN, TASSIGN, RASSIGN,  EQUAL, LE, GE, GT, LT, NOT, INC, DEC, COMMA  }
     literals = { ';' ,'?', ':','!'}
     # Ignoring spaces, new lines and comments
@@ -15,7 +15,7 @@ class Lexer(Lexer):
     ignore_comment = r'\#(.*)'
 
     # Regular expression rules for tokens
-
+    FNUMBER = r'\d+\.\d+'
     NUMBER  = r'\d+'
     EQUAL   = r'=='
     PASSIGN = r'\+='
@@ -58,7 +58,7 @@ class Lexer(Lexer):
     ID['range'] = RANGE
     ID['in']    = IN
    
-  
+    # Additional operations on generated tokens
     def ignore_newline(self, t):
         self.lineno += len(t.value)
 
