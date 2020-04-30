@@ -65,7 +65,7 @@ Here is the [youtube video](https://youtu.be/25r8BY_Id9M) link where we go throu
 [SWI-Prolog]: <https://www.swi-prolog.org/>
 [Python]: <https://www.python.org/>
 [Sly]: <https://sly.readthedocs.io/en/latest/>
-[Pyswip]: https://pypi.org/project/pyswip/>
+[Pyswip]: <https://pypi.org/project/pyswip/>
 
 [swi-prolog]: <https://www.swi-prolog.org/download/stable>
 [python]: <https://www.python.org/downloads/>
